@@ -13,4 +13,4 @@ test:
 	poetry run python -m pytest tests/ $(test_extra)
 
 run:
-	@echo "You should execute: poetry run naas-python"
+	@echo "You should execute:\n\tpoetry run naas-python"

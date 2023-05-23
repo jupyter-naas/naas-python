@@ -20,4 +20,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-naas-python = "naas_python:main"
+naas-python = "naas_python:cli"
