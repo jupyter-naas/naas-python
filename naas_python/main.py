@@ -1,6 +1,9 @@
+from naas_python.cli import app
+
+
 def main():
-    from .cli import app
     app()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

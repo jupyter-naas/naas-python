@@ -1,6 +1,6 @@
 import typer
-from .domains.space.handlers.CLISpaceAdaptor import primaryAdaptor
+from naas_python.domains.space.handlers.CLISpaceAdaptor import primaryAdaptor
 
 app = typer.Typer()
 
-app.add_typer(primaryAdaptor.app, name='space')
+app.add_typer(primaryAdaptor.app, name="space")
