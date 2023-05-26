@@ -1,4 +1,4 @@
-from ...SpaceSchema import ISpaceAdaptor
+from ...SpaceSchema import ISpaceAdaptor, SpaceAPIAdaptorError
 
 import requests
 import os
@@ -6,10 +6,6 @@ import os
 from requests.exceptions import ConnectionError
 from rich import print
 from naas_python import logger
-
-
-class NaasSpaceAPIAdaptorException(BaseException):
-    pass
 
 
 class NaasSpaceAPIAdaptor(ISpaceAdaptor):
@@ -51,19 +47,29 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
             api_response = method(url, json=payload)
             return api_response
 
-        except ConnectionError:
+        except ConnectionError as e:
             logger.debug(f"Failed to make API request: {method.__name__} {url}")
-            return f"Server seems to be unavailable at {self.host} or not running"
+            raise SpaceAPIAdaptorError(
+                f"Server seems to be unavailable at {self.host} or not running",
+            ) from e
 
     def handle_api_response(self, api_response, success_code, success_handler):
         if api_response.status_code == success_code:
             logger.debug("API response: Success")
             return success_handler(api_response.json())
 
+        elif api_response.status_code == 404:
+            logger.debug(
+                f"{self.__class__.__name__}: {api_response.json().get('message')}"
+            )
+            return None
+
         elif api_response.status_code == 409:
             logger.debug("API response: Conflict")
             json_body = api_response.json()
-            return f"Conflict: '{json_body.get('reason')}', Message: {json_body.get('message')}"
+            raise SpaceAPIAdaptorError(
+                message=f"Conflict, {json_body.get('message')}",
+            )
 
         elif api_response.status_code == 422:
             # validation code from FastAPI is 422
@@ -72,21 +78,18 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
                 api_response.json()["detail"][0]["loc"][1],
                 api_response.json()["detail"][0]["msg"],
             )
-            logger.debug(
-                f"API response: Unprocessable Entity :: '{component}' :: '{error}'"
+            raise SpaceAPIAdaptorError(
+                message=f"Unprocessable Entity: '{component}', {error}",
             )
-            return f"Unprocessable Entity: '{component}' :: '{error}'"
 
         elif api_response.status_code == 500:
-            logger.debug("API response: Internal Server Error")
-            return "Internal Server Error"
+            raise SpaceAPIAdaptorError(
+                message="Internal Server Error",
+            )
 
         else:
-            logger.debug(
-                f"API response: Untracked Error :: {api_response.status_code} :: {api_response.json()}"
-            )
-            raise NaasSpaceAPIAdaptorException(
-                f"An untracked error occurred on the API [{api_response.status_code}]"
+            raise SpaceAPIAdaptorError(
+                message=f"Untracked Error {api_response.json()}",
             )
 
     def handle_create_response(self, api_response):
@@ -124,14 +127,34 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
         return self.handle_create_response(api_response)
 
     @service_status_decorator
+    def delete(self, name: str, namespace: str):
+        """
+        Delete a space with the specified name and namespace.
+        """
+        api_response = self.make_api_request(
+            requests.delete, f"{self.host}/space/{name}?namespace={namespace}"
+        )
+        return self.handle_delete_response(api_response)
+
+    @service_status_decorator
     def get(self, name: str, namespace: str):
         """
         Get a space with the specified name and namespace.
         """
         api_response = self.make_api_request(
-            requests.get, f"{self.host}/space/{namespace}/{name}"
+            requests.get, f"{self.host}/space/{name}?namespace={namespace}"
         )
         return self.handle_get_response(api_response)
+
+    @service_status_decorator
+    def list(self, namespace: str, user_id: str):
+        """
+        List all spaces in the specified namespace.
+        """
+        api_response = self.make_api_request(
+            requests.get, f"{self.host}/space/list/{user_id}?namespace={namespace}"
+        )
+        return self.handle_list_response(api_response)
 
     @service_status_decorator
     def add(self):
