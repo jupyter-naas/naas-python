@@ -1,15 +1,19 @@
 from ...SpaceSchema import ISpaceInvoker, ISpaceDomain
 
+
 class SDKSpaceAdaptor(ISpaceInvoker):
-    
-    domain : ISpaceDomain
+    domain: ISpaceDomain
 
     def __init__(self, domain: ISpaceDomain):
         self.domain = domain
-    
+
     def add(self):
-        print('SDKSpaceAdaptor add called')
+        print("SDKSpaceAdaptor add called")
         self.domain.add()
-    
+
     def list(self):
-        print('SDKSpaceAdaptor list called')
+        print("SDKSpaceAdaptor list called")
+
+    def create(self, **kwargs):
+        print("SDKSpaceAdaptor create called")
+        self.domain.create(**kwargs)

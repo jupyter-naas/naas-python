@@ -1,3 +1,7 @@
+from .utils import CLILogger
+
+logger = CLILogger().logger
+
 # If the package is run as a script, run the main function to load the CLI.
 if __name__ == "__main__":
     from naas_python.main import main
