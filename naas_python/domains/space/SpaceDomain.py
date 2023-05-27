@@ -33,7 +33,6 @@ class SpaceDomain(ISpaceDomain):
         response = self.execute_adaptor_method("create", **kwargs)
         if isinstance(response, str):
             return response
-        print(response)
         return Space(**response)
 
     def get(self, **kwargs):
@@ -58,4 +57,11 @@ class SpaceDomain(ISpaceDomain):
             return response
 
     def update(self, **kwargs):
-        self.execute_adaptor_method("update", **kwargs)
+        response = self.execute_adaptor_method("update", **kwargs)
+
+        if isinstance(response, str):
+            return response
+        elif isinstance(response, dict) and "space" in response.keys():
+            return Space(**response["space"])
+        else:
+            return response

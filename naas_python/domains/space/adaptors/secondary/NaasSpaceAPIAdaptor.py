@@ -1,3 +1,4 @@
+import json
 from ...SpaceSchema import ISpaceAdaptor, SpaceAPIAdaptorError
 
 import requests
@@ -58,11 +59,21 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
             logger.debug("API response: Success")
             return success_handler(api_response.json())
 
+        elif api_response.status_code == 400:
+            logger.debug(
+                f"{self.__class__.__name__}: {api_response.json().get('message')}"
+            )
+            raise SpaceAPIAdaptorError(
+                message=f"Bad Request: {api_response.json().get('message')}",
+            )
+
         elif api_response.status_code == 404:
             logger.debug(
                 f"{self.__class__.__name__}: {api_response.json().get('message')}"
             )
-            return None
+            raise SpaceAPIAdaptorError(
+                message=f"No resource matching the given criteria: {api_response.json().get('message')}",
+            )
 
         elif api_response.status_code == 409:
             logger.debug("API response: Conflict")
@@ -78,6 +89,7 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
                 api_response.json()["detail"][0]["loc"][1],
                 api_response.json()["detail"][0]["msg"],
             )
+
             raise SpaceAPIAdaptorError(
                 message=f"Unprocessable Entity: '{component}', {error}",
             )
@@ -155,6 +167,18 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
             requests.get, f"{self.host}/space/list/{user_id}?namespace={namespace}"
         )
         return self.handle_list_response(api_response)
+
+    @service_status_decorator
+    def update(self, name: str, namespace: str, update_patch: dict):
+        """
+        Update a space with the specified name and namespace.
+        """
+        api_response = self.make_api_request(
+            requests.post,
+            f"{self.host}/space/{name}/update?namespace={namespace}",
+            update_patch,
+        )
+        return self.handle_get_response(api_response)
 
     @service_status_decorator
     def add(self):

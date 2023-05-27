@@ -1,3 +1,4 @@
+import json
 from typing import Any, List
 
 import rich
@@ -8,6 +9,7 @@ from pydantic import BaseModel
 from rich.console import Console
 from rich.table import Table
 from typer.core import TyperGroup
+import os
 
 from naas_python import logger
 
@@ -30,14 +32,14 @@ class PydanticTableModel:
     def __init__(self, models: List[BaseModel]):
         super().__init__()
         self.models = models
-        self.table = self.rich_table()
+        self.rich_table()
 
     def rich_table(self):
         # Get the field names from the first model in the list, and remove the resources and protocols fields
         field_names = [
             field
             for field in self.models[0].__fields__.keys()
-            if field not in ["resources", "protocols"]
+            if field not in ["resources", "protocols", "id", "user_id", "env"]
         ]
 
         # Create table and add header
@@ -47,16 +49,19 @@ class PydanticTableModel:
         for model in self.models:
             _model = model.dict()
             row_values = [str(_model[field]) for field in field_names]
-            print(f"row_values: {row_values}")
             self.table.add_row(*row_values)
 
     def add_models(self):
         for space in self.models:
-            pieces = [f"{k}: {v}\n" for k, v in space.dict().items()]
+            pieces = [
+                f"{k}: {v}\n"
+                for k, v in space.dict().items()
+                if k not in ["resources", "protocols", "env"] and v
+            ]
+
             max_length = max([len(piece) for piece in pieces])
             splitter = "-" * max_length
-            rich.print(f"{splitter}\n{''.join(pieces)}")
-        rich.print(f"{splitter}\n")
+            rich.print(f"{splitter}\n{''.join(pieces)}{splitter}")
 
 
 class TyperSpaceAdaptor(ISpaceInvoker):
@@ -169,7 +174,12 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 # print space table in the terminal
                 if isinstance(spaces, List):
                     if not spaces:
-                        print("No spaces found")
+                        rich.print(
+                            rich.panel.Panel(
+                                "No spaces found for the given parameters",
+                                style="magenta",
+                            )
+                        )
                         return
                     if rich_preview:
                         self.console.print(PydanticTableModel(spaces).table)
@@ -187,7 +197,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 "default", "--namespace", "-ns", help="Namespace of the space"
             ),
             rich_preview: bool = typer.Option(
-                False,
+                os.environ.get("NAAS_CLI_RICH_PREVIEW", False),
                 "--rich-preview",
                 "-rp",
                 help="Rich preview of the space information as a table",
@@ -195,6 +205,45 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         ):
             try:
                 space = self.domain.get(name=name, namespace=namespace)
+                # print space table in the terminal
+                if isinstance(space, Space):
+                    if rich_preview:
+                        self.console.print(PydanticTableModel([space]).table)
+                    else:
+                        PydanticTableModel([space]).add_models()
+                else:
+                    print(f"Unrecognized type: {type(space)}")
+            except NaasSpaceError as e:
+                e.pretty_print()
+
+        @self.app.command()
+        def update(
+            name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
+            namespace: str = typer.Option(
+                "default", "--namespace", "-ns", help="Namespace of the space"
+            ),
+            update_patch: str = typer.Option(
+                None,
+                "--update-patch",
+                "-up",
+                help="Update patch for the Space",
+            ),
+            rich_preview: bool = typer.Option(
+                False,
+                "--rich-preview",
+                "-rp",
+                help="Rich preview of the space information as a table",
+            ),
+        ):
+            try:
+                if isinstance(update_patch, str):
+                    update_patch = json.loads(update_patch)
+
+                space = self.domain.update(
+                    name=name,
+                    namespace=namespace,
+                    update_patch=update_patch,
+                )
                 # print space table in the terminal
                 if isinstance(space, Space):
                     if rich_preview:
