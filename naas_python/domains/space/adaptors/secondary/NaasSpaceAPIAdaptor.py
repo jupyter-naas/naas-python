@@ -1,12 +1,9 @@
-import json
-from ...SpaceSchema import ISpaceAdaptor, SpaceAPIAdaptorError
-
-import requests
 import os
 
-from requests.exceptions import ConnectionError
-from rich import print
+import requests
 from naas_python import logger
+from naas_python.domains.space.SpaceSchema import ISpaceAdaptor, SpaceAPIAdaptorError
+from requests.exceptions import ConnectionError
 
 
 class NaasSpaceAPIAdaptor(ISpaceAdaptor):

@@ -1,4 +1,9 @@
-from .SpaceSchema import ISpaceDomain, ISpaceAdaptor, Space, SpaceDomainError
+from naas_python.domains.space.SpaceSchema import (
+    ISpaceDomain,
+    ISpaceAdaptor,
+    Space,
+    SpaceDomainError,
+)
 from naas_python import logger
 from typing import Callable
 

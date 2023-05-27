@@ -1,24 +1,22 @@
 import json
-from typing import Any, List
+import os
+from typing import List
 
 import rich
 import typer
 import yaml
 from click import Context
+from naas_python import logger
 from pydantic import BaseModel
 from rich.console import Console
 from rich.table import Table
 from typer.core import TyperGroup
-import os
 
-from naas_python import logger
-
-from ...SpaceSchema import (
+from naas_python.domains.space.SpaceSchema import (
     ISpaceDomain,
     ISpaceInvoker,
     NaasSpaceError,
     Space,
-    TyperSpaceError,
 )
 
 
