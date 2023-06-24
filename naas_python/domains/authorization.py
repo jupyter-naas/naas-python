@@ -13,15 +13,16 @@ def write_token_to_file(token: str):
 
 def load_token_from_file() -> str:
     credentials_file = Path.home() / ".naas" / "credentials"
+
     if not credentials_file.exists():
         raise FileNotFoundError("Missing NAAS credentials file")
 
     with open(credentials_file, "r") as f:
         for line in f:
             if line.startswith("NAAS_TOKEN="):
-                token = line.strip().split("=")[1]
+                _token = line.strip().split("=")[1]
 
-    if not token:
+    if not _token:
         raise ValueError("File exists but does not contain a valid NAAS token")
 
-    return token
+    return _token

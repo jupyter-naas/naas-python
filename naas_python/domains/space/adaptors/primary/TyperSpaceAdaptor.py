@@ -32,19 +32,15 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             help="User NAAS authorization token",
         ),
     ):
-        # Check if the token is provided as a command-line argument
-        if (
-            not token
-            and (credentials_file := Path.home() / ".naas" / "credentials").exists()
-        ):
-            token = load_token_from_file(credentials_file)
-
-        # Use the token value as required
+        # Check when the token is not provided as a command-line argument
         if not token:
-            typer.echo(
-                "Missing NAAS token; pass --token or set NAAS_TOKEN as an environment variable"
-            )
-            raise typer.Exit(1)
+            try:
+                # Attempt to load the token from the credentials file
+                token = load_token_from_file()
+            except FileNotFoundError:
+                typer.echo(
+                    "Missing NAAS credentials file; pass --token or set NAAS_TOKEN as an environment variable"
+                )
+                raise typer.Exit(1)
 
-        # Set the token value in the context object
         ctx.obj = SimpleNamespace(token=token)

@@ -67,3 +67,13 @@ def test_credentials_missing_token(sdk_space_adaptor):
     # Call the credentials method without a token or credentials file
     with pytest.raises(Exception):
         sdk_space_adaptor.credentials()
+
+
+def test_credentials_missing_token_with_file(sdk_space_adaptor):
+    # make sure to create the credentials file
+    _token = generate_test_token_hash()
+    with open(Path.home() / ".naas" / "credentials", "w") as f:
+        f.write("NAAS_TOKEN=" + _token)
+
+    # Call the credentials method without explicit passing token or environment variable
+    assert sdk_space_adaptor.credentials().token == _token
