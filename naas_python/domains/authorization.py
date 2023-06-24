@@ -19,6 +19,9 @@ def load_token_from_file() -> str:
     with open(credentials_file, "r") as f:
         for line in f:
             if line.startswith("NAAS_TOKEN="):
-                return line.strip().split("=")[1]
+                token = line.strip().split("=")[1]
 
-    return ""  # File exists but does not contain a valid token
+    if not token:
+        raise ValueError("File exists but does not contain a valid NAAS token")
+
+    return token

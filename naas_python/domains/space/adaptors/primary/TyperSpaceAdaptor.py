@@ -39,9 +39,6 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         ):
             token = load_token_from_file(credentials_file)
 
-        elif token:
-            write_token_to_file(token)
-
         # Use the token value as required
         if not token:
             typer.echo(
