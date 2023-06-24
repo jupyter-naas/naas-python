@@ -71,14 +71,27 @@ class SDKSpaceAdaptor(ISpaceInvoker):
             print(e)
             raise e
 
-    def update(self, name: str, namespace: str, image: str, env: dict, resources: dict):
+    def update(
+        self,
+        name: str,
+        namespace: str,
+        image: str,
+        env: dict,
+        resources: dict,
+        cpu: str,
+        memory: str,
+    ):
         try:
             space = self.domain.update(
                 name=name,
                 namespace=namespace,
-                image=image,
-                env=env,
-                resources=resources,
+                update_patch={
+                    "image": image,
+                    "cpu": cpu,
+                    "memory": memory,
+                    "env": env,
+                    "resources": resources,
+                },
             )
             # print space table in the terminal
             if isinstance(space, Space):

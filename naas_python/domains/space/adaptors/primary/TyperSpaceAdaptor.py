@@ -220,11 +220,23 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             namespace: str = typer.Option(
                 "default", "--namespace", "-ns", help="Namespace of the space"
             ),
-            update_patch: str = typer.Option(
-                None,
-                "--update-patch",
-                "-up",
-                help="Update patch for the Space",
+            cpu: str = typer.Option(
+                ...,
+                "--cpu",
+                help="CPU utilization for the Space container",
+            ),
+            memory: str = typer.Option(
+                ...,
+                "--memory",
+                help="Memory utilization for the Space container",
+            ),
+            env: str = typer.Option(
+                List[str], "--env", help="Environment variables", default=[]
+            ),
+            image: str = typer.Option(
+                ...,
+                "--image",
+                help="Image of the space, e.g. placeholder/placeholder:latest",
             ),
             rich_preview: bool = typer.Option(
                 False,
@@ -234,8 +246,12 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             ),
         ):
             try:
-                if isinstance(update_patch, str):
-                    update_patch = json.loads(update_patch)
+                update_patch = {
+                    "cpu": cpu,
+                    "memory": memory,
+                    "env": env,
+                    "image": image,
+                }
 
                 space = self.domain.update(
                     name=name,
