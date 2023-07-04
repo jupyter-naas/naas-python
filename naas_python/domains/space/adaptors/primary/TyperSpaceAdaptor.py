@@ -1,6 +1,9 @@
 import json
 import os
 from typing import List
+from pathlib import Path
+from types import SimpleNamespace
+from naas_python.authorization import write_token_to_file, load_token_from_file
 
 import rich
 import typer
@@ -66,6 +69,12 @@ class TyperSpaceAdaptor(ISpaceInvoker):
     def __init__(self, domain: ISpaceDomain):
         self.domain = domain
         self.console = Console()
+
+        def load_config_file(config_path: str):
+            with open(config_path, "r") as file:
+                config = yaml.safe_load(file)
+            return config
+
         self.app = typer.Typer(
             cls=OrderCommands,
             help="Naas Space CLI",
@@ -76,34 +85,49 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             context_settings={"help_option_names": ["-h", "--help"]},
         )
 
-        def load_config_file(config_path: str):
-            with open(config_path, "r") as file:
-                config = yaml.safe_load(file)
-            return config
+        def authorization_callback(
+            token: str = typer.Option(
+                None,
+                "--token",
+                envvar="NAAS_TOKEN",
+                help="User NAAS authorization token",
+            ),
+        ):
+            # Check when the token is not provided as a command-line argument
+            if not token:
+                try:
+                    # Attempt to load the token from the credentials file
+                    token = load_token_from_file()
+                except FileNotFoundError:
+                    typer.echo(
+                        "Missing NAAS credentials file; pass --token or set NAAS_TOKEN as an environment variable"
+                    )
+                    raise typer.Exit(1)
+
+        Token = typer.Option(..., callback=authorization_callback)
 
         @self.app.command()
         def create(
+            token: str = Token,
             name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
             namespace: str = typer.Option(
                 "default", "--namespace", "-ns", help="Namespace of the space"
             ),
-            image: str = typer.Option(
-                "placeholder/placeholder:latest", "--image", help="Image of the space"
-            ),
-            user_id: str = typer.Option(
-                ...,
-                "--user-id",
-                help="User ID (UUID) of the user who created the Space",
-            ),
+            image: str = typer.Option(..., "--image", help="Image of the space"),
             env: str = typer.Option(
                 None,
                 "--env",
                 help="Environment variables for the Space container",
             ),
-            resources: str = typer.Option(
-                None,
-                "--resources",
-                help="Resources for CPU and Memory utilization for the Space container",
+            cpu: str = typer.Option(
+                1,
+                "--cpu",
+                help="CPU utilization for the Space container",
+            ),
+            memory: str = typer.Option(
+                "1Gi",
+                "--memory",
+                help="Memory utilization for the Space container",
             ),
             rich_preview: bool = typer.Option(
                 False,
@@ -117,9 +141,9 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                     name=name,
                     namespace=namespace,
                     image=image,
-                    user_id=user_id,
                     env=env,
-                    resources=resources,
+                    resources={"cpu": cpu, "memory": memory},
+                    token=ctx.obj.token,
                 )
                 # print space table in the terminal
                 if isinstance(space, Space):
@@ -152,11 +176,6 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def list(
-            user_id: str = typer.Option(
-                ...,
-                "--user-id",
-                help="User ID (UUID) of the user who created the Space",
-            ),
             namespace: str = typer.Option(
                 "default", "--namespace", "-ns", help="Namespace of the space"
             ),
@@ -168,7 +187,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             ),
         ):
             try:
-                spaces = self.domain.list(user_id=user_id, namespace=namespace)
+                spaces = self.domain.list(namespace=namespace)
                 # print space table in the terminal
                 if isinstance(spaces, List):
                     if not spaces:
@@ -221,20 +240,18 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 "default", "--namespace", "-ns", help="Namespace of the space"
             ),
             cpu: str = typer.Option(
-                ...,
+                1,
                 "--cpu",
                 help="CPU utilization for the Space container",
             ),
             memory: str = typer.Option(
-                ...,
+                "1Gi",
                 "--memory",
                 help="Memory utilization for the Space container",
             ),
-            env: str = typer.Option(
-                List[str], "--env", help="Environment variables", default=[]
-            ),
+            env: str = typer.Option(List[str], "--env", help="Environment variables"),
             image: str = typer.Option(
-                ...,
+                "placeholder/placeholder:latest",
                 "--image",
                 help="Image of the space, e.g. placeholder/placeholder:latest",
             ),

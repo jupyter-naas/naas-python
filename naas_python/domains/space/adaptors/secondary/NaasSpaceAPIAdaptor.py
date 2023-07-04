@@ -39,10 +39,10 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
 
         return wrapper
 
-    def make_api_request(self, method, url, payload=None):
+    def make_api_request(self, method, url, token, payload=None):
         try:
             logger.debug(f"Making API request: {method.__name__} {url}")
-            api_response = method(url, json=payload)
+            api_response = method(url, json=payload, headers={"Authorization": f"Bearer {token}"})
             return api_response
 
         except ConnectionError as e:
@@ -120,6 +120,7 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
     @service_status_decorator
     def create(
         self,
+        token: str,
         **kwargs,
     ):
         """
@@ -131,42 +132,42 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
                 payload[key] = value
 
         api_response = self.make_api_request(
-            method=requests.post, url=f"{self.host}/space/", payload=payload
+            method=requests.post, url=f"{self.host}/space/", payload=payload, token=token
         )
         return self.handle_create_response(api_response)
 
     @service_status_decorator
-    def delete(self, name: str, namespace: str):
+    def delete(self, name: str, namespace: str, token: str):
         """
         Delete a space with the specified name and namespace.
         """
         api_response = self.make_api_request(
-            requests.delete, f"{self.host}/space/{name}?namespace={namespace}"
+            requests.delete, f"{self.host}/space/{name}?namespace={namespace}", token=token
         )
         return self.handle_delete_response(api_response)
 
     @service_status_decorator
-    def get(self, name: str, namespace: str):
+    def get(self, name: str, namespace: str, token: str):
         """
         Get a space with the specified name and namespace.
         """
         api_response = self.make_api_request(
-            requests.get, f"{self.host}/space/{name}?namespace={namespace}"
+            requests.get, f"{self.host}/space/{name}?namespace={namespace}", token=token
         )
         return self.handle_get_response(api_response)
 
     @service_status_decorator
-    def list(self, namespace: str, user_id: str):
+    def list(self, namespace: str, token: str):
         """
         List all spaces in the specified namespace.
         """
         api_response = self.make_api_request(
-            requests.get, f"{self.host}/space/list/{user_id}?namespace={namespace}"
+            requests.get, f"{self.host}/space/list/{namespace}", token=token
         )
         return self.handle_list_response(api_response)
 
     @service_status_decorator
-    def update(self, name: str, namespace: str, update_patch: dict):
+    def update(self, name: str, namespace: str, update_patch: dict, token: str):
         """
         Update a space with the specified name and namespace.
         """
@@ -174,6 +175,7 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
             requests.post,
             f"{self.host}/space/{name}/update?namespace={namespace}",
             update_patch,
+            token=token,
         )
         return self.handle_get_response(api_response)
 
