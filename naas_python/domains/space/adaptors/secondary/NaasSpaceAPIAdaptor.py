@@ -1,4 +1,5 @@
 import os
+import json
 
 import requests
 from naas_python import logger
@@ -42,7 +43,15 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
     def make_api_request(self, method, url, token, payload=None):
         try:
             logger.debug(f"Making API request: {method.__name__} {url}")
-            api_response = method(url, json=payload, headers={"Authorization": f"Bearer {token}"})
+            print(payload)
+            if method == requests.post:
+                api_response = method(
+                    url, data=payload, headers={"Authorization": f"Bearer {token}"}
+                )
+            else:
+                api_response = method(
+                    url, json=payload, headers={"Authorization": f"Bearer {token}"}
+                )
             return api_response
 
         except ConnectionError as e:
@@ -86,6 +95,7 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
                 api_response.json()["detail"][0]["loc"][1],
                 api_response.json()["detail"][0]["msg"],
             )
+            print(api_response.json())
 
             raise SpaceAPIAdaptorError(
                 message=f"Unprocessable Entity: '{component}', {error}",
@@ -120,19 +130,20 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
     @service_status_decorator
     def create(
         self,
-        token: str,
         **kwargs,
     ):
         """
         Create a space with the specified details.
         """
-        payload = {}
-        for key, value in kwargs.items():
-            if value is not None:
-                payload[key] = value
+        name = kwargs.get("name")
+        containers = kwargs.get("containers")
+        token = kwargs.get("token")
 
         api_response = self.make_api_request(
-            method=requests.post, url=f"{self.host}/space/", payload=payload, token=token
+            method=requests.post,
+            url=f"{self.host}/space/",
+            payload=json.dumps({"name": name, "containers": containers}),
+            token=kwargs.get("token", os.environ.get("NAAS_TOKEN")),
         )
         return self.handle_create_response(api_response)
 
@@ -142,7 +153,9 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
         Delete a space with the specified name and namespace.
         """
         api_response = self.make_api_request(
-            requests.delete, f"{self.host}/space/{name}?namespace={namespace}", token=token
+            requests.delete,
+            f"{self.host}/space/{name}?namespace={namespace}",
+            token=token,
         )
         return self.handle_delete_response(api_response)
 

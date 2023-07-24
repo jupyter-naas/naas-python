@@ -1,17 +1,15 @@
-from naas_python.domains.space.SpaceSchema import (
-    ISpaceInvoker,
-    ISpaceDomain,
-    Space,
-    NaasSpaceError,
-)
-from naas_python.authorization import (
-    write_token_to_file,
-    load_token_from_file,
-    NAASCredentials,
-)
-
-from pathlib import Path
 import os
+
+from naas_python.authorization import (
+    NAASCredentials,
+    load_token_from_file,
+)
+from naas_python.domains.space.SpaceSchema import (
+    ISpaceDomain,
+    ISpaceInvoker,
+    NaasSpaceError,
+    Space,
+)
 
 
 class SDKSpaceAdaptor(ISpaceInvoker):

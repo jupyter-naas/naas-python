@@ -1,20 +1,17 @@
 import json
 import os
 from typing import List
-from pathlib import Path
-from types import SimpleNamespace
-from naas_python.authorization import write_token_to_file, load_token_from_file
 
 import rich
 import typer
-import yaml
 from click import Context
-from naas_python import logger
 from pydantic import BaseModel
 from rich.console import Console
 from rich.table import Table
 from typer.core import TyperGroup
+from typing_extensions import Annotated
 
+from naas_python import logger
 from naas_python.domains.space.SpaceSchema import (
     ISpaceDomain,
     ISpaceInvoker,
@@ -70,11 +67,6 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         self.domain = domain
         self.console = Console()
 
-        def load_config_file(config_path: str):
-            with open(config_path, "r") as file:
-                config = yaml.safe_load(file)
-            return config
-
         self.app = typer.Typer(
             cls=OrderCommands,
             help="Naas Space CLI",
@@ -85,34 +77,16 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             context_settings={"help_option_names": ["-h", "--help"]},
         )
 
-        def authorization_callback(
-            token: str = typer.Option(
-                None,
-                "--token",
-                envvar="NAAS_TOKEN",
-                help="User NAAS authorization token",
-            ),
-        ):
-            # Check when the token is not provided as a command-line argument
-            if not token:
-                try:
-                    # Attempt to load the token from the credentials file
-                    token = load_token_from_file()
-                except FileNotFoundError:
-                    typer.echo(
-                        "Missing NAAS credentials file; pass --token or set NAAS_TOKEN as an environment variable"
-                    )
-                    raise typer.Exit(1)
-
-        Token = typer.Option(..., callback=authorization_callback)
-
         @self.app.command()
         def create(
-            token: str = Token,
-            name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
-            namespace: str = typer.Option(
-                "default", "--namespace", "-ns", help="Namespace of the space"
+            token: str = typer.Option(
+                os.environ.get("NAAS_TOKEN", None),
+                "--token",
+                "-t",
+                help="Naas token",
+                show_default=False,
             ),
+            name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
             image: str = typer.Option(..., "--image", help="Image of the space"),
             env: str = typer.Option(
                 None,
@@ -129,6 +103,11 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 "--memory",
                 help="Memory utilization for the Space container",
             ),
+            port: str = typer.Option(
+                5080,
+                "--port",
+                help="Port for the Space container",
+            ),
             rich_preview: bool = typer.Option(
                 False,
                 "--rich-preview",
@@ -136,14 +115,24 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 help="Rich preview of the space information as a table",
             ),
         ):
+            if not token:
+                raise typer.BadParameter(
+                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
+                )
             try:
                 space = self.domain.create(
                     name=name,
-                    namespace=namespace,
-                    image=image,
-                    env=env,
-                    resources={"cpu": cpu, "memory": memory},
-                    token=ctx.obj.token,
+                    containers=[
+                        {
+                            "name": name,
+                            "image": image,
+                            "env": json.loads(env) if env else None,
+                            "cpu": cpu,
+                            "memory": memory,
+                            "port": 5080,
+                        }
+                    ],
+                    token=token,
                 )
                 # print space table in the terminal
                 if isinstance(space, Space):
@@ -158,11 +147,18 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def delete(
+            token: str = typer.Option(
+                os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
+            ),
             name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
             namespace: str = typer.Option(
                 "default", "--namespace", "-ns", help="Namespace of the space"
             ),
         ):
+            if not token:
+                raise typer.BadParameter(
+                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
+                )
             try:
                 self.domain.delete(name=name, namespace=namespace)
             except Exception as e:
@@ -176,6 +172,9 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def list(
+            token: str = typer.Option(
+                os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
+            ),
             namespace: str = typer.Option(
                 "default", "--namespace", "-ns", help="Namespace of the space"
             ),
@@ -186,6 +185,10 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 help="Rich preview of the space information as a table",
             ),
         ):
+            if not token:
+                raise typer.BadParameter(
+                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
+                )
             try:
                 spaces = self.domain.list(namespace=namespace)
                 # print space table in the terminal
@@ -209,6 +212,9 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def get(
+            token: str = typer.Option(
+                os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
+            ),
             name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
             namespace: str = typer.Option(
                 "default", "--namespace", "-ns", help="Namespace of the space"
@@ -220,6 +226,10 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 help="Rich preview of the space information as a table",
             ),
         ):
+            if not token:
+                raise typer.BadParameter(
+                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
+                )
             try:
                 space = self.domain.get(name=name, namespace=namespace)
                 # print space table in the terminal
@@ -235,6 +245,9 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def update(
+            token: str = typer.Option(
+                os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
+            ),
             name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
             namespace: str = typer.Option(
                 "default", "--namespace", "-ns", help="Namespace of the space"
@@ -262,6 +275,10 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 help="Rich preview of the space information as a table",
             ),
         ):
+            if not token:
+                raise typer.BadParameter(
+                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
+                )
             try:
                 update_patch = {
                     "cpu": cpu,
