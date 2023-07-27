@@ -1,14 +1,12 @@
 import os
 
+from naas_python.authorization import NAASCredentials, load_token_from_file
 from naas_python.domains.space.SpaceSchema import (
     ISpaceDomain,
     ISpaceInvoker,
     Space,
 )
-from naas_python.utils.domains_base.authorization import (
-    NAASCredentials,
-    load_token_from_file,
-)
+from naas_python.utils import render_cicd_jinja_template
 
 
 class SDKSpaceAdaptor(ISpaceInvoker):
@@ -20,6 +18,42 @@ class SDKSpaceAdaptor(ISpaceInvoker):
     def add(self):
         print("SDKSpaceAdaptor add called")
         self.domain.add()
+
+    def credentials(self, token: str = None) -> NAASCredentials:
+        """
+        Retrieves the NAAS credentials.
+        If the `token` parameter is not provided, it attempts to load the token
+        from the credentials file. If the file is not found or does not contain
+        a valid token, an exception is raised.
+        Args:
+            token (str, optional): Authorization token for NAAS. Defaults to the value of
+                the 'NAAS_TOKEN' environment variable.
+        Returns:
+            NAASCredentials: NAAS credentials.
+        Raises:
+            Exception: If the token is missing and cannot be loaded from the credentials file.
+        """
+        if not token:
+            if os.environ.get("NAAS_TOKEN"):
+                token = os.environ.get("NAAS_TOKEN")
+            else:
+                token = load_token_from_file()
+        return NAASCredentials(token=token)
+
+    def generate_ci(
+        ciprovider, space_name, registry_name, docker_context, dockerfile_path
+    ):
+        rendered_template = render_cicd_jinja_template(
+            docker_context=docker_context,
+            dockerfile_path=dockerfile_path,
+            registry_name=registry_name,
+            space_name=space_name,
+        )
+
+        os.makedirs(".github/workflows", exist_ok=True)
+
+        with open(".github/workflows/main.yml", "w") as file:
+            file.write(rendered_template)
 
     def create(
         self,

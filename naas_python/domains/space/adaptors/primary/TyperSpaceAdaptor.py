@@ -18,9 +18,7 @@ from naas_python.domains.space.SpaceSchema import (
     ISpaceInvoker,
     Space,
 )
-from naas_python.domains.space.adaptors.primary.utils import PydanticTableModel
-
-logger = getLogger(__name__)
+from naas_python.utils import render_cicd_jinja_template
 
 
 class OrderCommands(TyperGroup):
@@ -46,13 +44,100 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             context_settings={"help_option_names": ["-h", "--help"]},
         )
 
-        # Include all commands
-        self.app.command()(self.list)
-        self.app.command()(self.create)
-        self.app.command()(self.get)
-        self.app.command()(self.delete)
-        self.app.command()(self.update)
-        # self.app.command()(self.add)
+        @self.app.command()
+        def generate_ci(
+            ciprovider: str = typer.Option("GitHub", help="Name of the CI/CD provider"),
+            space_name: str = typer.Option(
+                ..., "--space-name", "-sn", help="Name of the space"
+            ),
+            registry_name: str = typer.Option(
+                ..., "--registry-name", "-rn", help="Name of the registry"
+            ),
+            docker_context: str = typer.Option(
+                ..., "--context", "-c", help="Docker context"
+            ),
+            dockerfile_path: str = typer.Option(
+                ..., "--dockerfile-path", "-dfp", help="Dockerfile path"
+            ),
+        ):
+            rendered_template = render_cicd_jinja_template(
+                docker_context=docker_context,
+                dockerfile_path=dockerfile_path,
+                registry_name=registry_name,
+                space_name=space_name,
+            )
+            os.makedirs(".github/workflows", exist_ok=True)
+
+            with open(".github/workflows/main.yml", "w") as file:
+                file.write(rendered_template)
+
+        @self.app.command()
+        def create(
+            token: str = typer.Option(
+                os.environ.get("NAAS_TOKEN", None),
+                "--token",
+                "-t",
+                help="Naas token",
+                show_default=False,
+            ),
+            name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
+            image: str = typer.Option(..., "--image", help="Image of the space"),
+            env: str = typer.Option(
+                None,
+                "--env",
+                help="Environment variables for the Space container",
+            ),
+            cpu: str = typer.Option(
+                1,
+                "--cpu",
+                help="CPU utilization for the Space container",
+            ),
+            memory: str = typer.Option(
+                "1Gi",
+                "--memory",
+                help="Memory utilization for the Space container",
+            ),
+            port: str = typer.Option(
+                5080,
+                "--port",
+                help="Port for the Space container",
+            ),
+            rich_preview: bool = typer.Option(
+                False,
+                "--rich-preview",
+                "-rp",
+                help="Rich preview of the space information as a table",
+            ),
+        ):
+            if not token:
+                raise typer.BadParameter(
+                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
+                )
+            try:
+                space = self.domain.create(
+                    name=name,
+                    containers=[
+                        {
+                            "name": name,
+                            "image": image,
+                            "env": json.loads(env) if env else None,
+                            "cpu": cpu,
+                            "memory": memory,
+                            "port": 5080,
+                        }
+                    ],
+                    token=token,
+                )
+                # print space table in the terminal
+                if isinstance(space, Space):
+                    if rich_preview:
+                        self.console.print(PydanticTableModel([space]).table)
+                    else:
+                        PydanticTableModel([space]).add_models()
+                else:
+                    print(f"Unrecognized type: {type(space)}")
+            except NaasSpaceError as e:
+                e.pretty_print()
 
     def _list_preview(self, data: List[dict], headers: list):
         if not isinstance(data, list):
