@@ -1,3 +1,5 @@
+# TODO: Rename file to CLISpaceHandler.py
+
 from ..adaptors.secondary.NaasSpaceAPIAdaptor import NaasSpaceAPIAdaptor
 from ..SpaceDomain import SpaceDomain
 from ..adaptors.primary.TyperSpaceAdaptor import TyperSpaceAdaptor
