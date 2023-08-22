@@ -12,9 +12,7 @@ from naas_python import logger
 
 
 class IRegistryAdaptor(metaclass=ABCMeta):
-    @abstractmethod
-    def add(self):
-        raise NotImplementedError
+    pass
 
 
 # Domain

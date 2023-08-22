@@ -37,7 +37,15 @@ class TyperRegistryAdaptor(IRegistryInvoker):
         )
 
         @self.app.command()
-        def create(self, name=""):
+        def create(
+            name: str = typer.Option(
+                ...,
+                "--name",
+                "-n",
+                help="Registry name to be created, must be unique and comply with cloud provider naming rules",
+            ),
+        ):
+            """Create a registry with the given name"""
             try:
                 response = self.domain.create(name=name)
                 self.console.print(Panel.fit(response.dict()))
@@ -48,7 +56,8 @@ class TyperRegistryAdaptor(IRegistryInvoker):
                 self.console.print("An error occurred", style="bold red")
 
         @self.app.command()
-        def list(self):
+        def list():
+            """List all registries for the current user"""
             try:
                 response = self.domain.list()
                 self.console.print(Panel.fit(response.dict()))
@@ -59,7 +68,15 @@ class TyperRegistryAdaptor(IRegistryInvoker):
                 self.console.print("An error occurred", style="bold red")
 
         @self.app.command()
-        def get(self, name=""):
+        def get(
+            name: str = typer.Option(
+                ...,
+                "--name",
+                "-n",
+                help="Registry name to be retrieved",
+            ),
+        ):
+            """Get a registry with the given name"""
             try:
                 response = self.domain.get_registry_by_name(name=name)
                 self.console.print(Panel.fit(response.dict()))
@@ -70,7 +87,12 @@ class TyperRegistryAdaptor(IRegistryInvoker):
                 self.console.print("An error occurred", style="bold red")
 
         @self.app.command()
-        def delete(self, name=""):
+        def delete(
+            name: str = typer.Option(
+                ..., "--name", "-n", help="Registry name to be deleted"
+            ),
+        ):
+            """Delete a registry with the given name"""
             try:
                 response = self.domain.delete(name=name)
                 self.console.print(Panel.fit(response.dict()))
@@ -81,7 +103,12 @@ class TyperRegistryAdaptor(IRegistryInvoker):
                 self.console.print("An error occurred", style="bold red")
 
         @self.app.command()
-        def get_credentials(self, name=""):
+        def get_credentials(
+            name: str = typer.Option(
+                ..., "--name", "-n", help="Get access credentials for registry"
+            ),
+        ):
+            """Get access credentials for registry"""
             try:
                 response = self.domain.get_credentials(name=name)
                 self.console.print(Panel.fit(response))

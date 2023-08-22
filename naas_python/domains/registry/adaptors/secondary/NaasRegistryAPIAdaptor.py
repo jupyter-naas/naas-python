@@ -12,9 +12,10 @@ from requests.exceptions import ConnectionError
 
 
 class NaasAPIAdaptorBase(IRegistryAdaptor):
+    host = os.environ.get("NAAS_API_BASE_URL", "http://localhost:8000")
+
     def __init__(self) -> None:
         super().__init__()
-        self.host = os.environ.get("NAAS_API_BASE_URL", "http://localhost:8000")
 
     def _check_service_status(self):
         """
@@ -94,6 +95,14 @@ class NaasRegistryAPIAdaptor(NaasAPIAdaptorBase):
         api_response = self.make_api_request(
             "GET",
             f"{self.host}/registry/{name}?self={self_param}",
+        )
+        return self.handle_get_response(api_response)
+
+    @NaasAPIAdaptorBase.service_status_decorator
+    def list_registries(self):
+        api_response = self.make_api_request(
+            "GET",
+            f"{self.host}/registry?page_size=100&page_number=0",
         )
         return self.handle_get_response(api_response)
 

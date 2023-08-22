@@ -13,7 +13,7 @@ class RegistryDomain(IRegistryDomain):
         self.adaptor = adaptor
 
     def list(self, **kwargs):
-        response = self.execute_adaptor_method("list", **kwargs)
+        response = self.execute_adaptor_method("list_registries", **kwargs)
         if isinstance(response, str):
             return response
         elif isinstance(response, dict) and "registries" in response.keys():
@@ -22,7 +22,7 @@ class RegistryDomain(IRegistryDomain):
             return response
 
     def create(self, **kwargs):
-        response = self.execute_adaptor_method("create", **kwargs)
+        response = self.execute_adaptor_method("create_registry", **kwargs)
         if isinstance(response, str):
             return response
         return Registry(**response)
@@ -37,10 +37,10 @@ class RegistryDomain(IRegistryDomain):
             return response
 
     def delete(self, **kwargs):
-        return self.execute_adaptor_method("delete", **kwargs)
+        return self.execute_adaptor_method("delete_registry", **kwargs)
 
     def get_credentials(self, **kwargs):
-        response = self.execute_adaptor_method("get_credentials", **kwargs)
+        response = self.execute_adaptor_method("get_registry_credentials", **kwargs)
         if isinstance(response, str):
             return response
         elif isinstance(response, dict) and "credentials" in response.keys():
