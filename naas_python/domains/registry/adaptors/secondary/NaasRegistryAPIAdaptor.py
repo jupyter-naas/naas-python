@@ -46,13 +46,16 @@ class NaasAPIAdaptorBase(IRegistryAdaptor):
 
         return wrapper
 
-    def make_api_request(self, method, url, token=None, payload=None):
+    def make_api_request(
+        self, method, url, token=None, payload=None, body=None, headers={}
+    ):
         if token:
-            headers = {"Authorization": f"Bearer {token}"}
-        else:
-            headers = {}
+            headers.update({"Authorization": f"Bearer {token}"})
         try:
-            response = method(url, json=payload, headers=headers)
+            if payload:
+                response = method(url, json=payload, headers=headers)
+            if body:
+                response = method(url, data=body, headers=headers)
             response.raise_for_status()  # Raise HTTPError for bad response status
             return response
         except requests.ConnectionError as e:
@@ -78,48 +81,56 @@ class NaasRegistryAPIAdaptor(NaasAPIAdaptorBase):
         elif response.status == 409:
             error = json.loads(response.read().decode())["detail"]
             raise ValueError(f"Conflict: {error}")
+        elif response.status == 500:
+            raise ValueError("Internal Server Error")
         else:
             raise ValueError(f"Unexpected status code: {response.status}")
 
     @NaasAPIAdaptorBase.service_status_decorator
-    def create_registry(self, registry_data):
+    def create_registry(self, name, **kwargs):
         api_response = self.make_api_request(
-            "POST",
-            f"{self.host}/registry/",
-            payload=json.dumps(registry_data),
+            requests.post,
+            f"{self.host}/registry",
+            body=json.dumps({"name": name}),
+            token=kwargs.get("token", os.environ.get("NAAS_TOKEN")),
         )
+
         return self.handle_create_response(api_response)
 
     @NaasAPIAdaptorBase.service_status_decorator
-    def get_registry_by_name(self, name, self_param):
+    def get_registry_by_name(self, name, self_param, **kwargs):
         api_response = self.make_api_request(
-            "GET",
+            requests.get,
             f"{self.host}/registry/{name}?self={self_param}",
+            token=kwargs.get("token", os.environ.get("NAAS_TOKEN")),
         )
         return self.handle_get_response(api_response)
 
     @NaasAPIAdaptorBase.service_status_decorator
-    def list_registries(self):
+    def list_registries(self, **kwargs):
         api_response = self.make_api_request(
-            "GET",
+            requests.get,
             f"{self.host}/registry?page_size=100&page_number=0",
+            token=kwargs.get("token", os.environ.get("NAAS_TOKEN")),
         )
         return self.handle_get_response(api_response)
 
     @NaasAPIAdaptorBase.service_status_decorator
-    def delete_registry(self, name, self_param, delete_data):
+    def delete_registry(self, name, self_param, delete_data, **kwargs):
         api_response = self.make_api_request(
-            "DELETE",
+            requests.delete,
             f"{self.host}/registry/{name}?self={self_param}",
             payload=json.dumps(delete_data),
+            token=kwargs.get("token", os.environ.get("NAAS_TOKEN")),
         )
         return self.handle_delete_response(api_response)
 
     @NaasAPIAdaptorBase.service_status_decorator
-    def get_registry_credentials(self, name, self_param):
+    def get_registry_credentials(self, name, self_param, **kwargs):
         api_response = self.make_api_request(
-            "GET",
+            requests.get,
             f"{self.host}/registry/{name}/credentials?self={self_param}",
+            token=kwargs.get("token", os.environ.get("NAAS_TOKEN")),
         )
         return self.handle_get_credentials_response(api_response)
 

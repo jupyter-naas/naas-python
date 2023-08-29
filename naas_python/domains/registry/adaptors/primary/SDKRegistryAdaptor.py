@@ -12,7 +12,7 @@ class SDKRegistryAdaptor(IRegistryInvoker):
     def __init__(self, domain: IRegistryDomain):
         self.domain = domain
 
-    def create(self, name=""):
+    def create(self, name: str):
         """Create a registry"""
         try:
             response = self.domain.create(name=name)
@@ -32,7 +32,7 @@ class SDKRegistryAdaptor(IRegistryInvoker):
         except Exception as e:
             raise e
 
-    def get(self, name=""):
+    def get(self, name: str):
         """Get a registry by name"""
         try:
             response = self.domain.get_registry_by_name(name=name)
@@ -42,7 +42,7 @@ class SDKRegistryAdaptor(IRegistryInvoker):
         except Exception as e:
             raise e
 
-    def delete(self, name=""):
+    def delete(self, name: str):
         """Delete a registry by name"""
         try:
             response = self.domain.delete(name=name)
@@ -52,7 +52,7 @@ class SDKRegistryAdaptor(IRegistryInvoker):
         except Exception as e:
             raise e
 
-    def get_credentials(self, name=""):
+    def get_credentials(self, name: str):
         """Get a registry credentials by name"""
         try:
             response = self.domain.get_credentials(name=name)

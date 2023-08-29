@@ -48,6 +48,7 @@ class TyperRegistryAdaptor(IRegistryInvoker):
             """Create a registry with the given name"""
             try:
                 response = self.domain.create(name=name)
+                print(response)
                 self.console.print(Panel.fit(response.dict()))
             except NaasRegistryError as e:
                 self.console.print(e.message, style="bold red")

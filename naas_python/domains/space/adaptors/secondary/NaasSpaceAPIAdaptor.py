@@ -44,6 +44,7 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
         try:
             logger.debug(f"Making API request: {method.__name__} {url}")
             print(payload)
+            print(token)
             if method == requests.post:
                 api_response = method(
                     url, data=payload, headers={"Authorization": f"Bearer {token}"}
@@ -130,65 +131,75 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
     @service_status_decorator
     def create(
         self,
+        name: str,
+        containers: list,
+        domain: str = "",
         **kwargs,
     ):
         """
         Create a space with the specified details.
         """
-        name = kwargs.get("name")
-        containers = kwargs.get("containers")
-        token = kwargs.get("token")
 
         api_response = self.make_api_request(
             method=requests.post,
             url=f"{self.host}/space/",
-            payload=json.dumps({"name": name, "containers": containers}),
-            token=kwargs.get("token", os.environ.get("NAAS_TOKEN")),
+            payload=json.dumps(
+                {
+                    "name": name,
+                    "domain": domain,
+                    "containers": containers,
+                }
+            ),
+            token=kwargs.get("token", os.environ.get("NAAS_API_TOKEN")),
         )
         return self.handle_create_response(api_response)
 
     @service_status_decorator
-    def delete(self, name: str, namespace: str, token: str):
+    def delete(self, name: str, **kwargs):
         """
         Delete a space with the specified name and namespace.
         """
         api_response = self.make_api_request(
             requests.delete,
-            f"{self.host}/space/{name}?namespace={namespace}",
-            token=token,
+            f"{self.host}/space/{name}",
+            token=kwargs.get("token", os.environ.get("NAAS_API_TOKEN")),
         )
         return self.handle_delete_response(api_response)
 
     @service_status_decorator
-    def get(self, name: str, namespace: str, token: str):
+    def get(self, name: str, **kwargs):
         """
         Get a space with the specified name and namespace.
         """
         api_response = self.make_api_request(
-            requests.get, f"{self.host}/space/{name}?namespace={namespace}", token=token
+            requests.get,
+            f"{self.host}/space/{name}",
+            token=kwargs.get("token", os.environ.get("NAAS_API_TOKEN")),
         )
         return self.handle_get_response(api_response)
 
     @service_status_decorator
-    def list(self, namespace: str, token: str):
+    def list(self, namespace: str, **kwargs):
         """
         List all spaces in the specified namespace.
         """
         api_response = self.make_api_request(
-            requests.get, f"{self.host}/space/list/{namespace}", token=token
+            requests.get,
+            f"{self.host}/space/",
+            token=kwargs.get("token", os.environ.get("NAAS_API_TOKEN")),
         )
         return self.handle_list_response(api_response)
 
     @service_status_decorator
-    def update(self, name: str, namespace: str, update_patch: dict, token: str):
+    def update(self, name: str, update_patch: dict, **kwargs):
         """
         Update a space with the specified name and namespace.
         """
         api_response = self.make_api_request(
-            requests.post,
-            f"{self.host}/space/{name}/update?namespace={namespace}",
-            update_patch,
-            token=token,
+            requests.put,
+            f"{self.host}/space/{name}",
+            payload=json.dumps(update_patch),
+            token=kwargs.get("token", os.environ.get("NAAS_API_TOKEN")),
         )
         return self.handle_get_response(api_response)
 

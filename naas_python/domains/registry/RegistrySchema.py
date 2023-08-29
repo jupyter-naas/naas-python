@@ -24,6 +24,7 @@ class IRegistryDomain(metaclass=ABCMeta):
     def execute_adaptor_method(self, method_name, **kwargs):
         try:
             method = getattr(self.adaptor, method_name, None)
+            print(method)
             if method is None:
                 raise RegistryDomainError(
                     f"Method '{method_name}' not found on adaptor '{self.adaptor.__class__.__name__}'"

@@ -22,7 +22,7 @@ class RegistryDomain(IRegistryDomain):
             return response
 
     def create(self, **kwargs):
-        response = self.execute_adaptor_method("create_registry", **kwargs)
+        response = self.adaptor.create_registry(**kwargs)
         if isinstance(response, str):
             return response
         return Registry(**response)

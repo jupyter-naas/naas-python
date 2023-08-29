@@ -2,6 +2,8 @@ from abc import ABCMeta, abstractmethod
 from typing import Any
 from naas_models.pydantic.space_p2p import *
 from naas_python import logger
+from typing import List, Optional
+from pydantic import BaseModel
 
 # Secondary adaptor
 
@@ -71,3 +73,12 @@ class SDKSpaceAdaptorError(NaasSpaceError):
 
 class SpaceDomainError(NaasSpaceError):
     pass
+
+
+class SpaceDTO(BaseModel):
+    name: str
+    image: str
+    env: Optional[str] = None
+    cpu: str = "1"
+    memory: str = "1Gi"
+    port: str = "5080"

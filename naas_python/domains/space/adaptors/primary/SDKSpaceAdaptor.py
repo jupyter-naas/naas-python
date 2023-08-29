@@ -1,3 +1,4 @@
+import json
 import os
 
 from naas_python.authorization import (
@@ -43,24 +44,25 @@ class SDKSpaceAdaptor(ISpaceInvoker):
             cpu (str): The CPU request for the container to run.
             memory (str): The memory request for the container to run.
         """
+        # Create registry if it doesn't exist
+        from naas_python.domains.registry.handlers.PythonHandler import (
+            primaryAdaptor as registry_primary_adaptor,
+        )
+
+        registry = registry_primary_adaptor.create(
+            "naas-test",
+        )
+        # get registry credentials
+        registry_credentials = registry_primary_adaptor.get_credentials(
+            name="naas-test",
+        )
+
         # Create container or get existing container credentials
         if space_type == "docker":
-            # we need to call the registry domain api to get the credentials,
-            # I am adding a dummy call until we sort out the registry domain integration
             container = {
-                "registry": {
-                    "host": "https://registry.naas.ai",
-                    "username": "naas",
-                    "password": "naas",
-                },
-                "image": "naas",
+                "registry": registry_credentials,
+                "image": "naas",  # need to change this to the name of the image so we can build it
             }
-            # container = self.domain.create_docker_container(
-            #     space_name=space_name,
-            #     dockerfile_path=dockerfile_path,
-            #     docker_context=docker_context,
-            #     container_port=container_port,
-            # )
         else:
             raise NotImplementedError(f"Space type {space_type} is not supported yet")
 
@@ -82,44 +84,29 @@ class SDKSpaceAdaptor(ISpaceInvoker):
 
         return space
 
-    def credentials(self, token: str = None) -> NAASCredentials:
-        """
-        Retrieves the NAAS credentials.
-        If the `token` parameter is not provided, it attempts to load the token
-        from the credentials file. If the file is not found or does not contain
-        a valid token, an exception is raised.
-        Args:
-            token (str, optional): Authorization token for NAAS. Defaults to the value of
-                the 'NAAS_TOKEN' environment variable.
-        Returns:
-            NAASCredentials: NAAS credentials.
-        Raises:
-            Exception: If the token is missing and cannot be loaded from the credentials file.
-        """
-        if not token:
-            if os.environ.get("NAAS_TOKEN"):
-                token = os.environ.get("NAAS_TOKEN")
-            else:
-                token = load_token_from_file()
-        return NAASCredentials(token=token)
-
     def create(
         self,
         name: str,
-        namespace: str,
         image: str,
-        user_id: str,
         env: dict,
-        resources: dict,
+        cpu: int,
+        memory: int,
+        port: int = 5080,
+        domain: str = "",
     ):
         try:
             space = self.domain.create(
                 name=name,
-                namespace=namespace,
-                image=image,
-                user_id=user_id,
-                env=env,
-                resources=resources,
+                containers=[
+                    {
+                        "name": name,
+                        "image": image,
+                        "env": json.loads(env) if env else None,
+                        "cpu": cpu,
+                        "memory": memory,
+                        "port": port,
+                    }
+                ],
             )
             # print space table in the terminal
             if isinstance(space, Space):
@@ -129,9 +116,9 @@ class SDKSpaceAdaptor(ISpaceInvoker):
         except NaasSpaceError as e:
             e.pretty_print()
 
-    def get(self, name: str, namespace: str):
+    def get(self, name: str):
         try:
-            space = self.domain.get(name=name, namespace=namespace)
+            space = self.domain.get(name=name)
             # print space table in the terminal
             if isinstance(space, Space):
                 return space
@@ -140,9 +127,9 @@ class SDKSpaceAdaptor(ISpaceInvoker):
         except NaasSpaceError as e:
             e.pretty_print()
 
-    def list(self, user_id: str, namespace: str):
+    def list(self):
         try:
-            space = self.domain.list(user_id=user_id, namespace=namespace)
+            space = self.domain.list()
             # print space table in the terminal
             if isinstance(space, Space):
                 return space
@@ -151,9 +138,9 @@ class SDKSpaceAdaptor(ISpaceInvoker):
         except NaasSpaceError as e:
             e.pretty_print()
 
-    def delete(self, name: str, namespace: str):
+    def delete(self, name: str):
         try:
-            self.domain.delete(name=name, namespace=namespace)
+            self.domain.delete(name=name)
         except Exception as e:
             print(e)
             raise e
@@ -161,24 +148,24 @@ class SDKSpaceAdaptor(ISpaceInvoker):
     def update(
         self,
         name: str,
-        namespace: str,
         image: str,
         env: dict,
-        resources: dict,
-        cpu: str,
-        memory: str,
+        cpu: int,
+        memory: int,
+        port: int = 5080,
     ):
         try:
+            update_patch = {
+                "cpu": cpu,
+                "memory": memory,
+                "env": env,
+                "image": image,
+                "port": port,
+            }
+
             space = self.domain.update(
                 name=name,
-                namespace=namespace,
-                update_patch={
-                    "image": image,
-                    "cpu": cpu,
-                    "memory": memory,
-                    "env": env,
-                    "resources": resources,
-                },
+                update_patch=update_patch,
             )
             # print space table in the terminal
             if isinstance(space, Space):

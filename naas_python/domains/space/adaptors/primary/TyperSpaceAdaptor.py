@@ -80,13 +80,6 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def create(
-            token: str = typer.Option(
-                os.environ.get("NAAS_TOKEN", None),
-                "--token",
-                "-t",
-                help="Naas token",
-                show_default=False,
-            ),
             name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
             image: str = typer.Option(..., "--image", help="Image of the space"),
             env: str = typer.Option(
@@ -116,10 +109,6 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 help="Rich preview of the space information as a table",
             ),
         ):
-            if not token:
-                raise typer.BadParameter(
-                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
-                )
             try:
                 space = self.domain.create(
                     name=name,
@@ -133,7 +122,6 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                             "port": 5080,
                         }
                     ],
-                    token=token,
                 )
                 # print space table in the terminal
                 if isinstance(space, Space):
@@ -148,20 +136,10 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def delete(
-            token: str = typer.Option(
-                os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
-            ),
             name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
-            namespace: str = typer.Option(
-                "default", "--namespace", "-ns", help="Namespace of the space"
-            ),
         ):
-            if not token:
-                raise typer.BadParameter(
-                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
-                )
             try:
-                self.domain.delete(name=name, namespace=namespace)
+                self.domain.delete(name=name)
             except Exception as e:
                 logger.debug(e)
                 raise e
@@ -191,23 +169,24 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 cpu (str): The CPU request for the container to run.
                 memory (str): The memory request for the container to run.
             """
+            # Create registry if it doesn't exist
+            from naas_python.domains.registry.handlers.PythonHandler import (
+                primaryAdaptor as registry_primary_adaptor,
+            )
+
+            registry = registry_primary_adaptor.create(
+                "naas-test",
+            )
+            # get registry credentials
+            registry_credentials = registry_primary_adaptor.get_credentials(
+                name="naas-test",
+            )
+
             # Create container or get existing container credentials
             if space_type == "docker":
-                # we need to call the registry domain api to get the credentials,
-                # I am adding a dummy call until we sort out the registry domain integration
-                # container = self.domain.create_docker_container(
-                #     space_name=space_name,
-                #     dockerfile_path=dockerfile_path,
-                #     docker_context=docker_context,
-                #     container_port=container_port,
-                # )
                 container = {
-                    "registry": {
-                        "host": "https://registry.naas.ai",
-                        "username": "naas",
-                        "password": "naas",
-                    },
-                    "image": "naas",
+                    "registry": registry_credentials,
+                    "image": "naas",  # need to change this to the name of the image so we can build it
                 }
             else:
                 raise NotImplementedError(
@@ -234,12 +213,6 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def list(
-            token: str = typer.Option(
-                os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
-            ),
-            namespace: str = typer.Option(
-                "default", "--namespace", "-ns", help="Namespace of the space"
-            ),
             rich_preview: bool = typer.Option(
                 False,
                 "--rich-preview",
@@ -247,12 +220,8 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 help="Rich preview of the space information as a table",
             ),
         ):
-            if not token:
-                raise typer.BadParameter(
-                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
-                )
             try:
-                spaces = self.domain.list(namespace=namespace)
+                spaces = self.domain.list()
                 # print space table in the terminal
                 if isinstance(spaces, List):
                     if not spaces:
@@ -274,13 +243,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def get(
-            token: str = typer.Option(
-                os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
-            ),
             name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
-            namespace: str = typer.Option(
-                "default", "--namespace", "-ns", help="Namespace of the space"
-            ),
             rich_preview: bool = typer.Option(
                 os.environ.get("NAAS_CLI_RICH_PREVIEW", False),
                 "--rich-preview",
@@ -288,12 +251,8 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 help="Rich preview of the space information as a table",
             ),
         ):
-            if not token:
-                raise typer.BadParameter(
-                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
-                )
             try:
-                space = self.domain.get(name=name, namespace=namespace)
+                space = self.domain.get(name=name)
                 # print space table in the terminal
                 if isinstance(space, Space):
                     if rich_preview:
@@ -307,13 +266,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
         @self.app.command()
         def update(
-            token: str = typer.Option(
-                os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
-            ),
             name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
-            namespace: str = typer.Option(
-                "default", "--namespace", "-ns", help="Namespace of the space"
-            ),
             cpu: str = typer.Option(
                 1,
                 "--cpu",
@@ -337,10 +290,6 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 help="Rich preview of the space information as a table",
             ),
         ):
-            if not token:
-                raise typer.BadParameter(
-                    "Token is required, please provide a token or set NAAS_TOKEN environment variable"
-                )
             try:
                 update_patch = {
                     "cpu": cpu,
@@ -351,7 +300,6 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
                 space = self.domain.update(
                     name=name,
-                    namespace=namespace,
                     update_patch=update_patch,
                 )
                 # print space table in the terminal
