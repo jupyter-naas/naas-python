@@ -10,7 +10,7 @@ from requests.exceptions import ConnectionError
 class NaasSpaceAPIAdaptor(ISpaceAdaptor):
     def __init__(self):
         super().__init__()
-        self.host = os.environ.get("NAAS_SPACE_API_HOST", "http://localhost:8000")
+        self.host = os.environ.get("NAAS_SPACE_API_HOST", "http://api.naas.ai")
 
     def _check_service_status(self):
         """
@@ -43,8 +43,7 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
     def make_api_request(self, method, url, token, payload=None):
         try:
             logger.debug(f"Making API request: {method.__name__} {url}")
-            print(payload)
-            print(token)
+
             if method == requests.post:
                 api_response = method(
                     url, data=payload, headers={"Authorization": f"Bearer {token}"}
@@ -179,7 +178,7 @@ class NaasSpaceAPIAdaptor(ISpaceAdaptor):
         return self.handle_get_response(api_response)
 
     @service_status_decorator
-    def list(self, namespace: str, **kwargs):
+    def list(self, **kwargs):
         """
         List all spaces in the specified namespace.
         """

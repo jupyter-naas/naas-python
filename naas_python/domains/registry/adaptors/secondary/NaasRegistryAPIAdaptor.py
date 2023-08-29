@@ -12,7 +12,7 @@ from requests.exceptions import ConnectionError
 
 
 class NaasAPIAdaptorBase(IRegistryAdaptor):
-    host = os.environ.get("NAAS_API_BASE_URL", "http://localhost:8000")
+    host = os.environ.get("NAAS_SPACE_API_HOST", "http://api.naas.ai")
 
     def __init__(self) -> None:
         super().__init__()
