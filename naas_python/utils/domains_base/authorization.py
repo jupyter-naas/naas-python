@@ -1,5 +1,4 @@
 import os
-from types import SimpleNamespace
 from dataclasses import dataclass
 
 

@@ -1,6 +1,6 @@
-from .utils import CLILogger
+from .utils.log import initialize_logging
 
-logger = CLILogger().logger
+logger = initialize_logging()
 
 # If the package is run as a script, run the main function to load the CLI.
 if __name__ == "__main__":

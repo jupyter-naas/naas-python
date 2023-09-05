@@ -1,7 +1,10 @@
 from abc import ABCMeta, abstractmethod
 from typing import Any
 from naas_models.pydantic.space_p2p import *
-from naas_python import logger
+
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 # Secondary adaptor
 

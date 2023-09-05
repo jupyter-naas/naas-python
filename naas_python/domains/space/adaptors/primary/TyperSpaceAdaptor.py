@@ -11,13 +11,17 @@ from rich.table import Table
 from typer.core import TyperGroup
 from typing_extensions import Annotated
 
-from naas_python import logger
 from naas_python.domains.space.SpaceSchema import (
     ISpaceDomain,
     ISpaceInvoker,
     NaasSpaceError,
     Space,
 )
+
+
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class OrderCommands(TyperGroup):

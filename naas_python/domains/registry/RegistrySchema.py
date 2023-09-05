@@ -6,13 +6,33 @@ from naas_models.pydantic.registry_p2p import *
 from rich.console import Console
 from rich.panel import Panel
 
-from naas_python import logger
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 # Secondary adaptor
 
 
 class IRegistryAdaptor(metaclass=ABCMeta):
-    pass
+    @abstractmethod
+    def create_registry(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_registry_by_name(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def list_registries(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete_registry(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_registry_credentials(self, **kwargs):
+        raise NotImplementedError
 
 
 # Domain
@@ -21,30 +41,50 @@ class IRegistryAdaptor(metaclass=ABCMeta):
 class IRegistryDomain(metaclass=ABCMeta):
     adaptor: IRegistryAdaptor
 
-    def execute_adaptor_method(self, method_name, **kwargs):
-        try:
-            method = getattr(self.adaptor, method_name, None)
-            if method is None:
-                raise RegistryDomainError(
-                    f"Method '{method_name}' not found on adaptor '{self.adaptor.__class__.__name__}'"
-                )
+    @abstractmethod
+    def list(self, **kwargs):
+        raise NotImplementedError
 
-            if not isinstance(method, Callable):
-                raise RegistryDomainError(
-                    f"Method '{method_name}' is not callable on adaptor '{self.adaptor.__class__.__name__}'"
-                )
+    @abstractmethod
+    def create(self, **kwargs):
+        raise NotImplementedError
 
-            return method(**kwargs)
+    @abstractmethod
+    def get_registry_by_name(self, **kwargs):
+        raise NotImplementedError
 
-        except Exception as e:
-            raise e
+    @abstractmethod
+    def delete(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_credentials(self, **kwargs):
+        raise NotImplementedError
 
 
 # Primary Adaptor
 
 
 class IRegistryInvoker(metaclass=ABCMeta):
-    pass
+    @abstractmethod
+    def list(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def create(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_credentials(self, **kwargs):
+        raise NotImplementedError
 
 
 class NaasRegistryError(Exception):
@@ -63,7 +103,10 @@ class NaasRegistryError(Exception):
     def pretty_print(self):
         console = Console()
         panel = Panel(
-            self.message, title="Error", title_align="left", border_style="bold red"
+            self.message,
+            title=f"Error  [{self.__class__.__name__}]",
+            title_align="left",
+            border_style="bold red",
         )
         console.print(panel)
 

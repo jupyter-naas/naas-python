@@ -4,7 +4,6 @@ from naas_python.domains.space.SpaceSchema import (
     Space,
     SpaceDomainError,
 )
-from naas_python import logger
 from typing import Callable
 
 

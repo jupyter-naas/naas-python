@@ -2,9 +2,12 @@ import os
 import json
 
 import requests
-from naas_python import logger
 from naas_python.domains.space.SpaceSchema import ISpaceAdaptor, SpaceAPIAdaptorError
 from requests.exceptions import ConnectionError
+
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class NaasSpaceAPIAdaptor(ISpaceAdaptor):
