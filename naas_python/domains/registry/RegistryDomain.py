@@ -1,83 +1,45 @@
 from naas_python.domains.registry.RegistrySchema import (
     IRegistryDomain,
     IRegistryAdaptor,
-    Registry,
-    RegistryDomainError,
-    RegistryAPIAdaptorError,
+    RegistryListResponse,
+    RegistryGetResponse,
+    RegistryCreationResponse,
+    RegistryCredentialsResponse,
 )
-from typing import Callable
+from typing import Callable, Dict
 
 
 class RegistryDomain(IRegistryDomain):
     def __init__(self, adaptor: IRegistryAdaptor):
         self.adaptor = adaptor
 
-    def list(self, page_size: int, page_number: int):
-        try:
-            response = self.adaptor.list_registries(
-                page_size=page_size, page_number=page_number
-            )
-            if isinstance(response, str):
-                return response
-            elif isinstance(response, dict) and "registries" in response.keys():
-                return [Registry(**registry) for registry in response["registries"]]
-            else:
-                return response
-        except RegistryAPIAdaptorError as e:
-            raise RegistryDomainError(e.message)
-        except Exception as e:
-            raise RegistryDomainError(e) from e
+    def list(self, page_size: int, page_number: int) -> RegistryListResponse:
+        response = self.adaptor.list_registries(
+            page_size=page_size, page_number=page_number
+        )
+        return RegistryListResponse(**response)
 
     def create(
         self,
         name: str,
-    ):
-        try:
-            response = self.adaptor.create_registry(name=name)
-            if isinstance(response, str):
-                return response
-            return Registry(**response)
-        except RegistryAPIAdaptorError as e:
-            raise RegistryDomainError(e.message)
-        except Exception as e:
-            raise RegistryDomainError(e)
+    ) -> RegistryCreationResponse:
+        response = self.adaptor.create_registry(name=name)
+        return RegistryCreationResponse(**response)
 
-    def get_registry_by_name(self, name: str):
-        try:
-            response = self.adaptor.get_registry_by_name(name=name)
-            if isinstance(response, str):
-                return response
-            elif isinstance(response, dict) and "registry" in response.keys():
-                return Registry(**response["registry"])
-            return Registry(**response)
-        except RegistryAPIAdaptorError as e:
-            raise RegistryDomainError(e.message)
-        except Exception as e:
-            raise RegistryDomainError(e)
+    def get_registry_by_name(self, name: str) -> RegistryGetResponse:
+        response = self.adaptor.get_registry_by_name(name=name)
+        return RegistryGetResponse(**response)
 
     def delete(
         self,
         name: str,
-    ):
-        try:
-            self.adaptor.delete_registry(name=name)
-        except RegistryAPIAdaptorError as e:
-            raise RegistryDomainError(e.message)
-        except Exception as e:
-            raise RegistryDomainError(e)
+    ) -> Dict[str, str]:
+        self.adaptor.delete_registry(name=name)
+        return {"message": "Registry deleted successfully"}
 
     def get_credentials(
         self,
         name: str,
-    ):
-        try:
-            response = self.adaptor.get_registry_credentials(name=name)
-            if isinstance(response, str):
-                return response
-            elif isinstance(response, dict) and "credentials" in response.keys():
-                return response["credentials"]
-            return response
-        except RegistryAPIAdaptorError as e:
-            raise RegistryDomainError(e.message)
-        except Exception as e:
-            raise RegistryDomainError(e)
+    ) -> RegistryCredentialsResponse:
+        response = self.adaptor.get_registry_credentials(name=name)
+        return RegistryCredentialsResponse(**response)

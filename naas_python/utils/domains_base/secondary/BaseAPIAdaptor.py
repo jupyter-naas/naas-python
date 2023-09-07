@@ -1,40 +1,24 @@
+from datetime import datetime
 import os
 from logging import getLogger
-import sys
-from typing import Any, Literal, Union
+from typing import Any, Union
 
 import requests
 from urllib3.exceptions import NewConnectionError, MaxRetryError
-import requests_cache
 from requests.exceptions import ConnectionError
-from rich.console import Console
-from rich.panel import Panel
+from cachetools.func import ttl_cache
+
+from naas_python.utils.exceptions import NaasException
 
 logger = getLogger(__name__)
 
 
-class APIAdaptorError(Exception):
-    def __init__(self, message, source=None):
-        self.message = message
-        self.source = source
-        super().__init__(self.message)
+class ServiceAuthenticationError(NaasException):
+    pass
 
-    def __str__(self):
-        return self.message
 
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        logger.debug(f"{self.__class__.__name__}: {self.message}")
-        return super().__call__(*args, **kwds)
-
-    def pretty_print(self):
-        console = Console()
-        panel = Panel(
-            self.message,
-            title=f"Error  [{self.__class__.__name__}]",
-            title_align="left",
-            border_style="bold red",
-        )
-        console.print(panel)
+class ServiceStatusError(NaasException):
+    pass
 
 
 class BaseAPIAdaptor:
@@ -47,64 +31,37 @@ class BaseAPIAdaptor:
         super().__init__()
         self.logger = getLogger(__name__)
         self.logger.debug(f"API Base URL: {self.host}")
-        self.cache_name = __name__
-        self._cache_dir_path = None
-        self._initialize_cache()
 
-    def _cache_path(self):
-        if self._cache_dir_path:
-            return self._cache_dir_path
-        else:
-            os.makedirs(".cache", exist_ok=True)
-            self._cache_dir_path = os.path.join(
-                ".cache", f"{self.cache_name}_cache.sqlite"
-            )
-            return self._cache_dir_path
-
-    def _initialize_cache(self):
-        # Initialize the requests-cache with a specified cache name and expiration time
-        self.logger.debug("Using requests_cache to speed up local tests execution.")
-
-        requests_cache.install_cache(
-            cache_name=self._cache_path(),
-            expire_after=self.cache_expire_after,
-            allowable_methods=("GET", "POST"),
-            backend="sqlite",
-        )
-
-        self.logger.debug(f"Cache path: {self._cache_dir_path}")
-        self.logger.debug(f"Cache expiration time: {self.cache_expire_after} seconds")
-
+    @ttl_cache(maxsize=1, ttl=cache_expire_after)
     def _check_service_status(self):
         """
         Check the status of the service API before executing other methods.
         """
         try:
+            self.logger.debug("Service status cache is still valid")
+
             api_response = requests.get(f"{self.host}")
 
+            self.logger.debug(
+                f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
+            )
+
             if api_response.status_code == 200:
-                self.logger.debug("Service status: Available")
                 return True  # Service is available
 
-            self.logger.debug("Service status: Unavailable")
             return False  # Service is not available
 
         except (ConnectionError, NewConnectionError, MaxRetryError) as e:
-            raise APIAdaptorError(
+            raise ServiceStatusError(
                 f"Unable to connect to [cyan]{self.host}[/cyan]. The service is currently unavailable. Please try again within a few minutes.",
-            ) from e
+                e,
+            )
 
     @staticmethod
     def service_status_decorator(func):
         def wrapper(self, *args, **kwargs):
-            try:
-                self._check_service_status()
-                return func(self, *args, **kwargs)
-            except APIAdaptorError as e:
-                e.pretty_print()
-                sys.exit(1)
-            except Exception as e:
-                raise APIAdaptorError(e) from e
+            self._check_service_status()
+            return func(self, *args, **kwargs)
 
         return wrapper
 
@@ -113,13 +70,31 @@ class BaseAPIAdaptor:
         method: Union[
             requests.get, requests.post, requests.patch, requests.put, requests.delete
         ],
-        url,
-        token=None,
-        payload=None,
+        url: str,
+        token: str = None,
+        payload: dict = {},
         headers: dict = {},
     ):
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+
         # Will be updated using the new authorization validators
         if token:
-            headers = {"Authorization": f"Bearer {token}"}
+            headers.update({"Authorization": f"Bearer {token}"})
+
         # Status checks will be handled separately
-        return method(url, json=payload, headers=headers)
+        try:
+            api_response = method(url, data=payload, headers=headers)
+            api_response.raise_for_status()
+            return api_response
+
+        except requests.exceptions.HTTPError as e:
+            if api_response.status_code == 401:
+                raise ServiceAuthenticationError(
+                    f"Unable to authenticate with the service. Please check your credentials and try again. Details: {api_response.json()['error_message']}",
+                    e,
+                )
+            elif api_response.status_code == 500:
+                raise ServiceStatusError(api_response.json()["error_message"], e)
+            else:
+                # Other status codes will be handled by the calling method
+                return api_response

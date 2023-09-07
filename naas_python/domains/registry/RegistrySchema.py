@@ -1,6 +1,8 @@
 # Exception
+from naas_python.utils.exceptions import NaasException
+
 from abc import ABCMeta, abstractmethod
-from typing import Any, Callable
+from typing import Any
 
 from naas_models.pydantic.registry_p2p import *
 from rich.console import Console
@@ -15,23 +17,23 @@ logger = getLogger(__name__)
 
 class IRegistryAdaptor(metaclass=ABCMeta):
     @abstractmethod
-    def create_registry(self, **kwargs):
+    def create_registry(self, **kwargs) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def get_registry_by_name(self, **kwargs):
+    def get_registry_by_name(self, **kwargs) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def list_registries(self, **kwargs):
+    def list_registries(self, **kwargs) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_registry(self, **kwargs):
+    def delete_registry(self, **kwargs) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def get_registry_credentials(self, **kwargs):
+    def get_registry_credentials(self, **kwargs) -> dict:
         raise NotImplementedError
 
 
@@ -42,19 +44,19 @@ class IRegistryDomain(metaclass=ABCMeta):
     adaptor: IRegistryAdaptor
 
     @abstractmethod
-    def list(self, **kwargs):
+    def list(self, **kwargs) -> RegistryListResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def create(self, **kwargs):
+    def create(self, **kwargs) -> RegistryCreationResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def get_registry_by_name(self, **kwargs):
+    def get_registry_by_name(self, **kwargs) -> RegistryGetResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, **kwargs):
+    def delete(self, **kwargs) -> dict:
         raise NotImplementedError
 
     @abstractmethod
@@ -87,41 +89,16 @@ class IRegistryInvoker(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class NaasRegistryError(Exception):
-    def __init__(self, message, source=None):
-        self.message = message
-        self.source = source
-        super().__init__(self.message)
-
-    def __str__(self):
-        return self.message
-
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        logger.debug(f"{self.__class__.__name__}: {self.message}")
-        return super().__call__(*args, **kwds)
-
-    def pretty_print(self):
-        console = Console()
-        panel = Panel(
-            self.message,
-            title=f"Error  [{self.__class__.__name__}]",
-            title_align="left",
-            border_style="bold red",
-        )
-        console.print(panel)
+# Exceptions
 
 
-class TyperRegistryError(NaasRegistryError):
+class RegistryValidationError(NaasException):
     pass
 
 
-class RegistryAPIAdaptorError(NaasRegistryError):
+class RegistryNotFound(NaasException):
     pass
 
 
-class SDKRegistryAdaptorError(NaasRegistryError):
-    pass
-
-
-class RegistryDomainError(NaasRegistryError):
+class RegistryConflictError(NaasException):
     pass

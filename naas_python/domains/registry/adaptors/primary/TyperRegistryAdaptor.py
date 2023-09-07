@@ -1,17 +1,18 @@
+from logging import getLogger
+from typing import List
+
+import rich
+from rich.panel import Panel
+
 import typer
 from click import Context
-from pydantic import BaseModel
 from rich.console import Console
+from rich.table import Table
 from typer.core import TyperGroup
-from rich.panel import Panel
-from typing_extensions import Annotated
 
-from logging import getLogger
 from naas_python.domains.registry.RegistrySchema import (
     IRegistryDomain,
     IRegistryInvoker,
-    RegistryDomainError,
-    TyperRegistryError,
 )
 
 logger = getLogger(__name__)
@@ -47,6 +48,26 @@ class TyperRegistryAdaptor(IRegistryInvoker):
         self.app.command()(self.delete)
         self.app.command()(self.get_credentials)
 
+    def _list_preview(self, data: List[dict], headers: list):
+        if not isinstance(data, list):
+            raise TypeError("Data must be a list of dicts, not {}".format(type(data)))
+
+        # Determine column widths based on the longest values
+        column_widths = [max(len(str(item)) for item in col) for col in zip(*data)]
+
+        # Print the headers
+        header_format = "  ".join(
+            f"{header:<{width}}" for header, width in zip(headers, column_widths)
+        )
+        print(header_format)
+
+        # Print the data
+        for row in data:
+            row_format = "  ".join(
+                f"{str(item):<{width}}" for item, width in zip(row, column_widths)
+            )
+            print(row_format)
+
     def create(
         self,
         name: str = typer.Option(
@@ -55,29 +76,78 @@ class TyperRegistryAdaptor(IRegistryInvoker):
             "-n",
             help="Registry name to be created, must be unique and comply with cloud provider naming rules",
         ),
+        rich_preview: bool = typer.Option(
+            False,
+            "--rich-preview",
+            "-rp",
+            help="Preview the response in the terminal using rich",
+        ),
     ):
         """Create a registry with the given name"""
-        try:
-            response = self.domain.create(name=name)
-            self.console.print(Panel.fit(response.dict()))
-        except RegistryDomainError as e:
-            e.pretty_print()
-        except Exception as e:
-            return TyperRegistryError(e.args[0]).pretty_print()
+        registry = self.domain.create(name=name)
+
+        # Extract the data
+        data = [registry.registry.dict().values()]
+
+        # Define column headers using the determined widths
+        headers = [key.upper() for key in registry.registry.dict().keys()]
+
+        if rich_preview:
+            # Create a Rich Table
+            table = Table(show_header=True, header_style="bold")
+            # Add columns to the table
+            for header in headers:
+                table.add_column(header, justify="center")
+
+            # Add data rows to the table
+            for row in data:
+                table.add_row(*row)
+
+            # Print the table
+            rich.print(table)
+
+        else:
+            self._list_preview(data, headers)
 
     def list(
         self,
         page_size: int = typer.Option(0, help="Size of each page of results"),
         page_number: int = typer.Option(0, help="Target page number of results"),
+        rich_preview: bool = typer.Option(
+            False,
+            "--rich-preview",
+            "-rp",
+            help="Preview the response in the terminal using rich",
+        ),
     ):
         """List all registries for the current user"""
-        try:
-            response = self.domain.list(page_size=page_size, page_number=page_number)
-            self.console.print(Panel.fit(response.dict()))
-        except RegistryDomainError as e:
-            e.pretty_print()
-        except Exception as e:
-            return TyperRegistryError(e.args[0]).pretty_print()
+        registry_list = self.domain.list(page_size=page_size, page_number=page_number)
+
+        # Extract the data
+        data = [registry.dict().values() for registry in registry_list.registries]
+
+        if len(data) == 0:
+            return
+
+        # Define column headers using the determined widths
+        headers = [key.upper() for key in registry_list.registries[0].dict().keys()]
+
+        if rich_preview:
+            # Create a Rich Table
+            table = Table(show_header=True, header_style="bold")
+            # Add columns to the table
+            for header in headers:
+                table.add_column(header, justify="center")
+
+            # Add data rows to the table
+            for row in data:
+                table.add_row(*row)
+
+            # Print the table
+            rich.print(table)
+
+        else:
+            self._list_preview(data, headers)
 
     def get(
         self,
@@ -87,15 +157,38 @@ class TyperRegistryAdaptor(IRegistryInvoker):
             "-n",
             help="Registry name to be retrieved",
         ),
+        rich_preview: bool = typer.Option(
+            False,
+            "--rich-preview",
+            "-rp",
+            help="Preview the response in the terminal using rich",
+        ),
     ):
         """Get a registry with the given name"""
-        try:
-            response = self.domain.get_registry_by_name(name=name)
-            self.console.print(Panel.fit(response.dict()))
-        except RegistryDomainError as e:
-            e.pretty_print()
-        except Exception as e:
-            return TyperRegistryError(e.args[0]).pretty_print()
+        registry = self.domain.get_registry_by_name(name=name)
+
+        # Extract the data
+        data = [registry.registry.dict().values()]
+
+        # Define column headers using the determined widths
+        headers = [key.upper() for key in registry.registry.dict().keys()]
+
+        if rich_preview:
+            # Create a Rich Table
+            table = Table(show_header=True, header_style="bold")
+            # Add columns to the table
+            for header in headers:
+                table.add_column(header, justify="center")
+
+            # Add data rows to the table
+            for row in data:
+                table.add_row(*row)
+
+            # Print the table
+            rich.print(table)
+
+        else:
+            self._list_preview(data, headers)
 
     def delete(
         self,
@@ -104,13 +197,7 @@ class TyperRegistryAdaptor(IRegistryInvoker):
         ),
     ):
         """Delete a registry with the given name"""
-        try:
-            response = self.domain.delete(name=name)
-            self.console.print(Panel.fit(response.dict()))
-        except RegistryDomainError as e:
-            e.pretty_print()
-        except Exception as e:
-            return TyperRegistryError(e.args[0]).pretty_print()
+        self.domain.delete(name=name)
 
     def get_credentials(
         self,
@@ -119,10 +206,5 @@ class TyperRegistryAdaptor(IRegistryInvoker):
         ),
     ):
         """Get access credentials for registry"""
-        try:
-            response = self.domain.get_credentials(name=name)
-            self.console.print(Panel.fit(response))
-        except RegistryDomainError as e:
-            e.pretty_print()
-        except Exception as e:
-            return TyperRegistryError(e.args[0]).pretty_print()
+        response = self.domain.get_credentials(name=name)
+        self.console.print(Panel.fit(response))
