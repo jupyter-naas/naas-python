@@ -207,4 +207,10 @@ class TyperRegistryAdaptor(IRegistryInvoker):
     ):
         """Get access credentials for registry"""
         response = self.domain.get_credentials(name=name)
-        self.console.print(Panel.fit(response))
+
+        with open(f"{name}-credentials.txt", "w") as f:
+            f.write(response.json())
+
+        self.console.print(
+            Panel.fit(f"Registry credentials saved to '{name}-credentials.txt'")
+        )

@@ -60,7 +60,7 @@ class IRegistryDomain(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_credentials(self, **kwargs):
+    def get_credentials(self, **kwargs) -> RegistryCredentialsResponse:
         raise NotImplementedError
 
 

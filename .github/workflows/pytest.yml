@@ -1,0 +1,34 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main  # Change this to your main branch name
+  pull_request:
+    branches:
+      - main  # Change this to your main branch name
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: 3.10
+          mamba-version: "*"
+          channels: conda-forge
+          channel-priority: true
+          environment-file: ./.github/environment.yaml
+      - shell: bash -el {0}
+        run: |
+          conda info
+          printenv | sort
+      - shell: bash -el {0}
+        run: |
+          conda activate naas-python
+          pytest tests
+
