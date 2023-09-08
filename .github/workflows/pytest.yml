@@ -14,28 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: condaforge/miniforge3:latest
-    defaults:
-        run:
-          shell: bash -el {0}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Restore Conda environment cache
-        id: restore-conda-environment-cache
-        uses: actions/cache/restore@v3
-        with:
-          path: ~/.conda/envs/naas-python
-          key: conda-environment-${{ hashFiles('.github/environment.yaml') }}
-
-      - name: Create Conda environment
+      - name: Install packate dependencies
         run: |
-          conda create -n naas-python -c conda-forge python==3.10
-          mamba env update -n  naas-python -f ./.github/environment.yaml
-          conda activate naas-python
-          conda info
-          printenv | sort
+          pip install pytest pydantic
 
       - name: Install main package
         run: |
@@ -47,10 +33,3 @@ jobs:
           conda activate naas-python
           pytest tests
 
-      - name: Save Conda environment cache
-        if: steps.restore-conda-environment-cache.outputs.cache-hit != 'true'
-        id: save-conda-environment-cache
-        uses: actions/cache/save@v3
-        with:
-          path: ~/.conda/envs/naas-python
-          key: conda-environment-${{ hashFiles('.github/environment.yaml') }}
