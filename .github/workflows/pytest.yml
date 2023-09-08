@@ -11,7 +11,9 @@ on:
 
 jobs:
   run:
-    runs-on: condaforge/miniforge3:latest
+    runs-on: ubuntu-latest
+    container:
+      image: condaforge/miniforge3:latest
 
     steps:
       - name: Checkout code
