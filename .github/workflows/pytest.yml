@@ -31,6 +31,7 @@ jobs:
           mamba-version: "*"
           channels: conda-forge
           channel-priority: strict
+          python-version: 3.8
           activate-environment: naas-python
           environment-file: ./.github/environment.yaml
           use-only-tar-bz2: true
