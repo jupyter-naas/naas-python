@@ -19,17 +19,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install packate dependencies
+      - name: Install package dependencies
         run: |
           pip install pytest pydantic
 
       - name: Install main package
         run: |
-          conda activate naas-python
           pip install -e .[dev]
 
       - name: pytest
         run: |
-          conda activate naas-python
           pytest tests
 
