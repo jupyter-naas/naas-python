@@ -22,7 +22,7 @@ class ServiceStatusError(NaasException):
 
 
 class BaseAPIAdaptor:
-    host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "http://localhost:8000")
+    host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "https://api.naas.ai")
     # Cache name is the name of the calling module
     cache_name = __name__
     cache_expire_after = 60  # Cache expires after 60 seconds
