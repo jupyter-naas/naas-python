@@ -32,6 +32,7 @@ jobs:
           mamba-version: "*"
           channels: conda-forge
           channel-priority: true
+          activate-environment: naas-python
           environment-file: ./.github/environment.yaml
 
       - shell: bash -el {0}
@@ -41,12 +42,10 @@ jobs:
 
       - name: Install main package
         run: |
-          conda activate naas-python
           pip install -e .[dev]
 
       - shell: bash -el {0}
         run: |
-          conda activate naas-python
           pytest tests
 
       - name: Save Conda environment cache
