@@ -1,4 +1,4 @@
-name: Run Tests
+name: Pytest
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
       - dev
 jobs:
-  test:
+  run-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,10 +24,17 @@ jobs:
           channels: conda-forge
           channel-priority: true
           environment-file: ./.github/environment.yaml
+
       - shell: bash -el {0}
         run: |
           conda info
           printenv | sort
+
+      - name: Install main package
+        run: |
+          conda activate naas-python
+          pip install -e .[dev]
+
       - shell: bash -el {0}
         run: |
           conda activate naas-python
