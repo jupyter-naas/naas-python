@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Restore Conda environment cache
         id: restore-conda-environment-cache
@@ -28,12 +28,12 @@ jobs:
         if: steps.restore-conda-environment-cache.outputs.cache-hit != 'true'
         uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: 3.10
           mamba-version: "*"
           channels: conda-forge
-          channel-priority: true
+          channel-priority: strict
           activate-environment: naas-python
           environment-file: ./.github/environment.yaml
+          use-only-tar-bz2: true
 
       - shell: bash -el {0}
         run: |
