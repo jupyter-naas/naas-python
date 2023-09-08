@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - dev
+
 jobs:
   run-test:
     runs-on: ubuntu-latest
@@ -16,7 +17,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Restore Conda environment cache
+        id: restore-conda-environment-cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ~/.conda/envs/naas-python
+          key: conda-environment-${{ hashFiles('.github/environment.yaml') }}
+
       - name: Set up Conda
+        if: steps.restore-conda-environment-cache.outputs.cache-hit != 'true'
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: 3.10
@@ -40,3 +49,10 @@ jobs:
           conda activate naas-python
           pytest tests
 
+      - name: Save Conda environment cache
+        if: steps.restore-conda-environment-cache.outputs.cache-hit != 'true'
+        id: save-conda-environment-cache
+        uses: actions/cache/save@v3
+        with:
+          path: ~/.conda/envs/naas-python
+          key: conda-environment-${{ hashFiles('.github/environment.yaml') }}
