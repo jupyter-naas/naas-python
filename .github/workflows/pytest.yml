@@ -19,6 +19,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Checkout naas-models
+        uses: actions/checkout@v2
+        with:
+          repository: jupyter-naas/naas-models
+          path: naas_models
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Install package dependencies
         run: |
           pip install pytest pydantic
