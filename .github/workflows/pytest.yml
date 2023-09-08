@@ -10,8 +10,8 @@ on:
       - dev
 
 jobs:
-  run-test:
-    runs-on: ubuntu-latest
+  run:
+    runs-on: condaforge/miniforge3:latest
 
     steps:
       - name: Checkout code
@@ -24,29 +24,22 @@ jobs:
           path: ~/.conda/envs/naas-python
           key: conda-environment-${{ hashFiles('.github/environment.yaml') }}
 
-      - name: Set up Conda
-        if: steps.restore-conda-environment-cache.outputs.cache-hit != 'true'
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          mamba-version: "*"
-          channels: conda-forge
-          channel-priority: strict
-          python-version: 3.8
-          activate-environment: naas-python
-          environment-file: ./.github/environment.yaml
-          use-only-tar-bz2: true
-
-      - shell: bash -el {0}
+      - name: Create Conda environment
         run: |
+          conda env create -n naas-python python==3.10
+          mamba install -n naas-python -c conda-forge --file ./.github/environment.yaml
           conda info
           printenv | sort
 
       - name: Install main package
         run: |
+          conda env activate naas-python
           pip install -e .[dev]
 
-      - shell: bash -el {0}
+      - name: pytest
         run: |
+          conda env activate naas-python
+          conda env create -n naas-python python=10
           pytest tests
 
       - name: Save Conda environment cache
