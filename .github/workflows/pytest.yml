@@ -30,18 +30,18 @@ jobs:
         run: |
           conda create -n naas-python -c conda-forge python==3.10
           mamba env update -n  naas-python -f ./.github/environment.yaml
+          conda ctivate naas-python
           conda info
           printenv | sort
 
       - name: Install main package
         run: |
-          conda env activate naas-python
+          conda ctivate naas-python
           pip install -e .[dev]
 
       - name: pytest
         run: |
-          conda env activate naas-python
-          conda env create -n naas-python python=10
+          conda activate naas-python
           pytest tests
 
       - name: Save Conda environment cache
