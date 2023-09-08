@@ -30,13 +30,13 @@ jobs:
         run: |
           conda create -n naas-python -c conda-forge python==3.10
           mamba env update -n  naas-python -f ./.github/environment.yaml
-          conda ctivate naas-python
+          conda activate naas-python
           conda info
           printenv | sort
 
       - name: Install main package
         run: |
-          conda ctivate naas-python
+          conda activate naas-python
           pip install -e .[dev]
 
       - name: pytest
