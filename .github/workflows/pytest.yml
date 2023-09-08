@@ -28,7 +28,7 @@ jobs:
 
       - name: Create Conda environment
         run: |
-          conda env create -n naas-python python==3.10
+          conda create -n naas-python -c conda-forge python==3.10
           mamba install -n naas-python -c conda-forge --file ./.github/environment.yaml
           conda info
           printenv | sort
