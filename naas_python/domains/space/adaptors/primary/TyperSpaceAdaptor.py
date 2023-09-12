@@ -83,7 +83,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         # Include all commands
         # self.app.command()(self.list)
         self.app.command()(self.create)
-        # self.app.command()(self.get)
+        self.app.command()(self.get)
         # self.app.command()(self.delete)
         # self.app.command()(self.update)
         # self.app.command()(self.add)
@@ -179,6 +179,94 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         else:
             self._list_preview(data, headers)
 
+    def get(
+        self,
+        name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
+        rich_preview: bool = typer.Option(
+            os.environ.get("NAAS_CLI_RICH_PREVIEW", False),
+            "--rich-preview",
+            "-rp",
+            help="Rich preview of the space information as a table",
+        ),
+    ):
+        """Get a space with the given name"""
+        space = self.domain.get(name=name)
+
+        # print space table in the terminal
+        if isinstance(space, Space):
+            if rich_preview:
+                self.console.print(PydanticTableModel([space]).table)
+            else:
+                PydanticTableModel([space]).add_models()
+            # space = self.domain.get(name=name, namespace=namespace)
+            # # print space table in the terminal
+            # if isinstance(space, Space):
+            #     if rich_preview:
+            #         self.console.print(PydanticTableModel([space]).table)
+            #     else:
+            #         PydanticTableModel([space]).add_models()
+            # else:
+            #     print(f"Unrecognized type: {type(space)}")
+
+    def update(
+        token: str = typer.Option(
+            os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
+        ),
+        name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
+        namespace: str = typer.Option(
+            "default", "--namespace", "-ns", help="Namespace of the space"
+        ),
+        cpu: str = typer.Option(
+            1,
+            "--cpu",
+            help="CPU utilization for the Space container",
+        ),
+        memory: str = typer.Option(
+            "1Gi",
+            "--memory",
+            help="Memory utilization for the Space container",
+        ),
+        env: str = typer.Option(List[str], "--env", help="Environment variables"),
+        image: str = typer.Option(
+            "placeholder/placeholder:latest",
+            "--image",
+            help="Image of the space, e.g. placeholder/placeholder:latest",
+        ),
+        rich_preview: bool = typer.Option(
+            False,
+            "--rich-preview",
+            "-rp",
+            help="Rich preview of the space information as a table",
+        ),
+    ):
+        if not token:
+            raise typer.BadParameter(
+                "Token is required, please provide a token or set NAAS_TOKEN environment variable"
+            )
+        try:
+            update_patch = {
+                "cpu": cpu,
+                "memory": memory,
+                "env": env,
+                "image": image,
+            }
+
+            space = self.domain.update(
+                name=name,
+                namespace=namespace,
+                update_patch=update_patch,
+            )
+            # print space table in the terminal
+            if isinstance(space, Space):
+                if rich_preview:
+                    self.console.print(PydanticTableModel([space]).table)
+                else:
+                    PydanticTableModel([space]).add_models()
+            else:
+                print(f"Unrecognized type: {type(space)}")
+        except NaasSpaceError as e:
+            e.pretty_print()
+
     def delete(
         token: str = typer.Option(
             os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
@@ -238,96 +326,5 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                     PydanticTableModel(spaces).add_models()
             else:
                 print(f"Unrecognized type: {type(spaces)}")
-        except NaasSpaceError as e:
-            e.pretty_print()
-
-    def get(
-        token: str = typer.Option(
-            os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
-        ),
-        name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
-        namespace: str = typer.Option(
-            "default", "--namespace", "-ns", help="Namespace of the space"
-        ),
-        rich_preview: bool = typer.Option(
-            os.environ.get("NAAS_CLI_RICH_PREVIEW", False),
-            "--rich-preview",
-            "-rp",
-            help="Rich preview of the space information as a table",
-        ),
-    ):
-        if not token:
-            raise typer.BadParameter(
-                "Token is required, please provide a token or set NAAS_TOKEN environment variable"
-            )
-        try:
-            space = self.domain.get(name=name, namespace=namespace)
-            # print space table in the terminal
-            if isinstance(space, Space):
-                if rich_preview:
-                    self.console.print(PydanticTableModel([space]).table)
-                else:
-                    PydanticTableModel([space]).add_models()
-            else:
-                print(f"Unrecognized type: {type(space)}")
-        except NaasSpaceError as e:
-            e.pretty_print()
-
-    def update(
-        token: str = typer.Option(
-            os.environ.get("NAAS_TOKEN", None), "--token", "-t", help="Naas token"
-        ),
-        name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
-        namespace: str = typer.Option(
-            "default", "--namespace", "-ns", help="Namespace of the space"
-        ),
-        cpu: str = typer.Option(
-            1,
-            "--cpu",
-            help="CPU utilization for the Space container",
-        ),
-        memory: str = typer.Option(
-            "1Gi",
-            "--memory",
-            help="Memory utilization for the Space container",
-        ),
-        env: str = typer.Option(List[str], "--env", help="Environment variables"),
-        image: str = typer.Option(
-            "placeholder/placeholder:latest",
-            "--image",
-            help="Image of the space, e.g. placeholder/placeholder:latest",
-        ),
-        rich_preview: bool = typer.Option(
-            False,
-            "--rich-preview",
-            "-rp",
-            help="Rich preview of the space information as a table",
-        ),
-    ):
-        if not token:
-            raise typer.BadParameter(
-                "Token is required, please provide a token or set NAAS_TOKEN environment variable"
-            )
-        try:
-            update_patch = {
-                "cpu": cpu,
-                "memory": memory,
-                "env": env,
-                "image": image,
-            }
-
-            space = self.domain.update(
-                name=name,
-                namespace=namespace,
-                update_patch=update_patch,
-            )
-            # print space table in the terminal
-            if isinstance(space, Space):
-                if rich_preview:
-                    self.console.print(PydanticTableModel([space]).table)
-                else:
-                    PydanticTableModel([space]).add_models()
-            else:
-                print(f"Unrecognized type: {type(space)}")
         except NaasSpaceError as e:
             e.pretty_print()

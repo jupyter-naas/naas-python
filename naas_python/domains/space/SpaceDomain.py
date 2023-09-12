@@ -3,6 +3,7 @@ from naas_python.domains.space.SpaceSchema import (
     ISpaceAdaptor,
     Space,
     SpaceCreationResponse,
+    SpaceGetResponse,
 )
 from typing import Callable
 
@@ -44,14 +45,9 @@ class SpaceDomain(ISpaceDomain):
         )
         return SpaceCreationResponse(**response)
 
-    def get_space_by_name(self, **kwargs):
-        response = self.execute_adaptor_method("get", **kwargs)
-        if isinstance(response, str):
-            return response
-        elif isinstance(response, dict) and "space" in response.keys():
-            return Space(**response["space"])
-        else:
-            return response
+    def get(self, name: str):
+        response = self.adaptor.get_space_by_name(name=name)
+        return SpaceGetResponse(**response)
 
     def delete(self, **kwargs):
         return self.execute_adaptor_method("delete", **kwargs)

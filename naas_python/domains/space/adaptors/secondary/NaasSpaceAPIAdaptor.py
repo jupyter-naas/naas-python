@@ -22,78 +22,10 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         super().__init__()
         # TODO: proper authorization validation utility function
         self._authorization_token = getenv("NAAS_PYTHON_API_TOKEN")
-        print(self._authorization_token)
-
-    # def handle_api_response(self, api_response, success_code, success_handler):
-    #     if api_response.status_code == success_code:
-    #         logger.debug("API response: Success")
-    #         return success_handler(api_response.json())
-
-    #     elif api_response.status_code == 400:
-    #         logger.debug(
-    #             f"{self.__class__.__name__}: {api_response.json().get('message')}"
-    #         )
-    #         raise SpaceAPIAdaptorError(
-    #             message=f"Bad Request: {api_response.json().get('message')}",
-    #         )
-
-    #     elif api_response.status_code == 404:
-    #         logger.debug(
-    #             f"{self.__class__.__name__}: {api_response.json().get('message')}"
-    #         )
-    #         raise SpaceAPIAdaptorError(
-    #             message=f"No resource matching the given criteria: {api_response.json().get('message')}",
-    #         )
-
-    #     elif api_response.status_code == 409:
-    #         logger.debug("API response: Conflict")
-    #         json_body = api_response.json()
-    #         raise SpaceAPIAdaptorError(
-    #             message=f"Conflict, {json_body.get('message')}",
-    #         )
-
-    #     elif api_response.status_code == 422:
-    #         # validation code from FastAPI is 422
-    #         # gather attribute name and error message
-    #         component, error = (
-    #             api_response.json()["detail"][0]["loc"][1],
-    #             api_response.json()["detail"][0]["msg"],
-    #         )
-    #         print(api_response.json())
-
-    #         raise SpaceAPIAdaptorError(
-    #             message=f"Unprocessable Entity: '{component}', {error}",
-    #         )
-
-    #     elif api_response.status_code == 500:
-    #         raise SpaceAPIAdaptorError(
-    #             message="Internal Server Error",
-    #         )
-
-    #     else:
-    #         raise SpaceAPIAdaptorError(
-    #             message=f"Untracked Error {api_response.json()}",
-    #         )
-
-    # def handle_create_response(self, api_response):
-    #     return self.handle_api_response(
-    #         api_response, 201, lambda json_body: json_body.get("space")
-    #     )
-
-    # def handle_get_response(self, api_response):
-    #     return self.handle_api_response(api_response, 200, lambda json_body: json_body)
-
-    # def handle_delete_response(self, api_response):
-    #     return self.handle_api_response(
-    #         api_response, 200, lambda json_body: "Space deleted successfully"
-    #     )
-
-    # def handle_list_response(self, api_response):
-    #     return self.handle_api_response(api_response, 200, lambda json_body: json_body)
 
     @BaseAPIAdaptor.service_status_decorator
     def create_space(self, name, domain, containers) -> dict:
-        _url = f"{self.host}/space"
+        _url = f"{self.host}/space/"
 
         self.logger.debug(f"create request url: {_url}")
 
@@ -109,7 +41,7 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         self.logger.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
-        return self.handle_create_response(api_response)
+        return self._handle_create_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
     def get_space_by_name(self, name):
@@ -126,7 +58,7 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
 
-        return self.handle_get_response(api_response)
+        return self._handle_get_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
     def list_spaces(self) -> dict:
@@ -142,7 +74,7 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         self.logger.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
-        return self.handle_list_response(api_response)
+        return self._handle_list_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
     def update_space(self, name, domain, containers) -> dict:
@@ -160,7 +92,7 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         self.logger.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
-        return self.handle_get_response(api_response)
+        return self._handle_get_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
     def delete_space(self, name) -> dict:
@@ -176,7 +108,7 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         self.logger.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
-        return self.handle_delete_response(api_response)
+        return self._handle_delete_response(api_response)
 
     def _handle_create_response(self, api_response: requests.Response) -> dict:
         if api_response.status_code == 201:

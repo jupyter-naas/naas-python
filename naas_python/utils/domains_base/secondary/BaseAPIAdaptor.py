@@ -88,13 +88,28 @@ class BaseAPIAdaptor:
             return api_response
 
         except requests.exceptions.HTTPError as e:
+            _response = api_response.json()
             if api_response.status_code == 401:
+                _message = ""
+                if "error_message" in _response:
+                    _message = _response["error_message"]
+                elif "detail" in _response:
+                    _message = _response["detail"]
+                else:
+                    _message = "Unauthorized"
                 raise ServiceAuthenticationError(
-                    f"Unable to authenticate with the service. Please check your credentials and try again. Details: {api_response.json()['error_message']}",
+                    f"Unable to authenticate with the service. Please check your credentials and try again. Details: {_message}",
                     e,
                 )
             elif api_response.status_code == 500:
-                raise ServiceStatusError(api_response.json()["error_message"], e)
+                _message = ""
+                if "error_message" in _response:
+                    _message = _response["error_message"]
+                elif "detail" in _response:
+                    _message = _response["detail"]
+                else:
+                    _message = "Internal Server Error"
+                raise ServiceStatusError(_message, e)
             else:
                 # Other status codes will be handled by the calling method
                 return api_response

@@ -48,7 +48,7 @@ class ISpaceDomain(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_space_by_name(self, **kwargs) -> SpaceGetResponse:
+    def get(self, **kwargs) -> SpaceGetResponse:
         raise NotImplementedError
 
     @abstractmethod
