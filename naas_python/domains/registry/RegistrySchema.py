@@ -1,14 +1,11 @@
 # Exception
-from naas_python.utils.exceptions import NaasException
-
 from abc import ABCMeta, abstractmethod
+from logging import getLogger
 from typing import Any
 
 from naas_models.pydantic.registry_p2p import *
-from rich.console import Console
-from rich.panel import Panel
 
-from logging import getLogger
+from naas_python.utils.exceptions import NaasException
 
 logger = getLogger(__name__)
 

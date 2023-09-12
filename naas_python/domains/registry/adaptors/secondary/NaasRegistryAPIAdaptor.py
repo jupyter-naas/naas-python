@@ -1,14 +1,13 @@
 import json
 from os import getenv
+
 import requests
-from requests.exceptions import ConnectionError
-from urllib.parse import urlparse
 
 from naas_python.domains.registry.RegistrySchema import (
     IRegistryAdaptor,
     RegistryConflictError,
-    RegistryValidationError,
     RegistryNotFound,
+    RegistryValidationError,
 )
 from naas_python.utils.domains_base.secondary.BaseAPIAdaptor import BaseAPIAdaptor
 
@@ -20,7 +19,7 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
         self._authorization_token = getenv("NAAS_PYTHON_API_TOKEN")
 
     @BaseAPIAdaptor.service_status_decorator
-    def create_registry(self, name):
+    def create_registry(self, name) -> dict:
         _url = f"{self.host}/registry/"
 
         self.logger.debug(f"create request url: {_url}")
@@ -38,7 +37,7 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
         return self._handle_create_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
-    def get_registry_by_name(self, name):
+    def get_registry_by_name(self, name) -> dict:
         _url = f"{self.host}/registry/{name}"
         self.logger.debug(f"get request url: {_url}")
 
@@ -55,7 +54,7 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
         return self._handle_get_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
-    def list_registries(self, page_size, page_number):
+    def list_registries(self, page_size, page_number) -> dict:
         _url = f"{self.host}/registry/?page_size={page_size}&page_number={page_number}"
 
         self.logger.debug(f"list request url: {_url}")
@@ -71,7 +70,7 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
         return self._handle_list_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
-    def delete_registry(self, name):
+    def delete_registry(self, name) -> dict:
         _url = f"{self.host}/registry/{name}"
         self.logger.debug(f"delete request url: {_url}")
 
@@ -88,7 +87,7 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
         return self._handle_delete_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
-    def get_registry_credentials(self, name):
+    def get_registry_credentials(self, name) -> dict:
         _url = f"{self.host}/registry/{name}/credentials"
 
         self.logger.debug(f"get credentials request url: {_url}")
@@ -108,6 +107,7 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     def _handle_create_response(self, api_response: requests.Response) -> dict:
         if api_response.status_code == 201:
             return api_response.json()
+
         elif api_response.status_code == 409:
             raise RegistryConflictError(
                 f"Unable to create registry: {api_response.json()['error_message']}"
@@ -141,6 +141,7 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     def _handle_get_response(self, api_response: requests.Response) -> dict:
         if api_response.status_code == 200:
             return api_response.json()
+
         elif api_response.status_code == 404:
             raise RegistryNotFound(
                 f"Error from server: {api_response.json()['error_message']}"
@@ -157,6 +158,7 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     def _handle_delete_response(self, api_response: requests.Response) -> dict:
         if api_response.status_code == 204:
             return {}
+
         elif api_response.status_code == 404:
             raise RegistryNotFound(
                 f"Error from server: {api_response.json()['error_message']}"
@@ -173,6 +175,7 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     def _handle_get_credentials_response(self, api_response: requests.Response) -> dict:
         if api_response.status_code == 200:
             return api_response.json()
+
         elif api_response.status_code == 404:
             raise RegistryNotFound(
                 f"Error from server: {api_response.json()['error_message']}"
@@ -185,20 +188,3 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
             raise Exception(
                 f"An unknown error occurred: {api_response.json()['error_message']}"
             )
-
-    # def _handle_create_response(self, api_response):
-    #     return self.handle_api_response(api_response, 201, lambda json_body: json_body)
-
-    # def _handle_get_response(self, api_response):
-    #     if api_response.status_code == 200:
-    #         return self.handle_api_response(
-    #             api_response, 200, lambda json_body: json_body
-    #         )
-    #     else:
-    #         return self.handle_api_response(api_response, api_response.status_code)
-
-    # def _handle_delete_response(self, api_response):
-    #     return self.handle_api_response(api_response, 204, lambda json_body: None)
-
-    # def _handle_get_credentials_response(self, api_response):
-    #     return self.handle_api_response(api_response, 200, lambda json_body: json_body)

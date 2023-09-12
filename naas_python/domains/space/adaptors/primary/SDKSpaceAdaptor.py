@@ -3,7 +3,6 @@ import os
 from naas_python.domains.space.SpaceSchema import (
     ISpaceDomain,
     ISpaceInvoker,
-    NaasSpaceError,
     Space,
 )
 from naas_python.utils.domains_base.authorization import (

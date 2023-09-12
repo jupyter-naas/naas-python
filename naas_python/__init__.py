@@ -1,6 +1,4 @@
 from .utils.log import initialize_logging
-import sys
-from os import getenv
 
 logger = initialize_logging()
 
@@ -15,3 +13,7 @@ else:
     from .domains.space.handlers.PythonHandler import primaryAdaptor as __space
 
     space = __space
+
+    from .domains.registry.handlers.PythonHandler import primaryAdaptor as __registry
+
+    registry = __registry
