@@ -43,10 +43,14 @@ class NaasException(click.ClickException):
 
         debug_mode = getenv("NAAS_PYTHON_DEBUG", debug)
 
-        if debug_mode == "True":
-            return True
-        elif debug_mode == "False":
-            return False
+        if isinstance(debug_mode, bool):
+            return debug_mode
+
+        elif isinstance(debug_mode, str):
+            if debug_mode.capitalize() == "True":
+                return True
+            elif debug_mode.capitalize() == "False":
+                return False
         else:
             raise ValueError(
                 f"Invalid value for NAAS_PYTHON_DEBUG environment variable: {debug_mode}"

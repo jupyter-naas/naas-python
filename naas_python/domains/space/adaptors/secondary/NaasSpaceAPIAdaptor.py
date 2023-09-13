@@ -61,8 +61,8 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         return self._handle_get_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
-    def list_spaces(self) -> dict:
-        _url = f"{self.host}/space/list/"
+    def list_spaces(self, page_size, page_number) -> dict:
+        _url = f"{self.host}/space/?page_size={page_size}&page_number={page_number}"
 
         self.logger.debug(f"list request url: {_url}")
 
@@ -78,6 +78,13 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
 
     @BaseAPIAdaptor.service_status_decorator
     def update_space(self, name, domain, containers) -> dict:
+        payload = {
+            "containers": containers,
+        }
+
+        if domain:
+            payload["domain"] = domain
+
         _url = f"{self.host}/space/{name}"
 
         self.logger.debug(f"update request url: {_url}")
@@ -85,7 +92,7 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         api_response = self.make_api_request(
             requests.put,
             _url,
-            payload=json.dumps({"domain": domain, "containers": containers}),
+            payload=json.dumps(payload),
             token=self._authorization_token,
         )
 

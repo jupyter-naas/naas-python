@@ -40,7 +40,7 @@ class ISpaceDomain(metaclass=ABCMeta):
     adaptor: ISpaceAdaptor
 
     @abstractmethod
-    def create(self, **kwargs) -> SpaceCreationResponse:
+    def create(self, **kwargs) -> Space:
         raise NotImplementedError
 
     @abstractmethod
@@ -48,7 +48,7 @@ class ISpaceDomain(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, **kwargs) -> SpaceGetResponse:
+    def get(self, **kwargs) -> Space:
         raise NotImplementedError
 
     @abstractmethod

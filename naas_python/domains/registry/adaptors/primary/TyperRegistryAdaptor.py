@@ -127,6 +127,7 @@ class TyperRegistryAdaptor(IRegistryInvoker):
         data = [registry.dict().values() for registry in registry_list.registries]
 
         if len(data) == 0:
+            print("No matching results found.")
             return
 
         # Define column headers using the determined widths

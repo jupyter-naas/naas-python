@@ -2,71 +2,44 @@ from naas_python.domains.space.SpaceSchema import (
     ISpaceDomain,
     ISpaceAdaptor,
     Space,
-    SpaceCreationResponse,
-    SpaceGetResponse,
+    SpaceListResponse,
 )
-from typing import Callable
 
 
 class SpaceDomain(ISpaceDomain):
     def __init__(self, adaptor: ISpaceAdaptor):
         self.adaptor = adaptor
 
-    # def execute_adaptor_method(self, method_name, **kwargs):
-    #     try:
-    #         if hasattr(self.adaptor, method_name):
-    #             method = getattr(self.adaptor, method_name)
-    #         else:
-    #             raise SpaceDomainError(
-    #                 f"Method '{method_name}' not found on adaptor '{self.adaptor.__class__.__name__}'"
-    #             )
-
-    #         if not isinstance(method, Callable):
-    #             raise SpaceDomainError(
-    #                 f"Method '{method_name}' not callable on adaptor '{self.adaptor.__class__.__name__}'"
-    #             )
-
-    #         return method(**kwargs)
-
-    #     except Exception as e:
-    #         raise e
-
     def add(self):
-        self.execute_adaptor_method("add")
+        # self.execute_adaptor_method("add")
+        pass
 
     def create(
         self,
         name: str,
         containers: list,
         domain: str,
-    ):
+    ) -> Space:
         response = self.adaptor.create_space(
             name=name, containers=containers, domain=domain
         )
-        return SpaceCreationResponse(**response)
+        return Space(**response)
 
     def get(self, name: str):
         response = self.adaptor.get_space_by_name(name=name)
-        return SpaceGetResponse(**response)
+        return Space(**response)
 
-    def delete(self, **kwargs):
-        return self.execute_adaptor_method("delete", **kwargs)
+    def delete(self, name: str):
+        return self.adaptor.delete_space(name=name)
 
-    def list(self, **kwargs):
-        response = self.execute_adaptor_method("list", **kwargs)
-        if isinstance(response, str):
-            return response
-        elif isinstance(response, dict) and "spaces" in response.keys():
-            return [Space(**space) for space in response["spaces"]]
-        else:
-            return response
+    def list(self, page_size: int, page_number: int) -> SpaceListResponse:
+        response = self.adaptor.list_spaces(
+            page_size=page_size, page_number=page_number
+        )
+        return SpaceListResponse(spaces=response)
 
-    def update(self, **kwargs):
-        response = self.execute_adaptor_method("update", **kwargs)
-
-        if isinstance(response, str):
-            return response
-        elif isinstance(response, dict) and "space" in response.keys():
-            return Space(**response["space"])
-        else:
-            return response
+    def update(self, name: str, containers: list, domain: str) -> Space:
+        response = self.adaptor.update_space(
+            name=name, containers=containers, domain=domain
+        )
+        return Space(**response)
