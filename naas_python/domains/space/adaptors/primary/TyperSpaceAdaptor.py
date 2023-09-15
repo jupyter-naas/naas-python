@@ -44,32 +44,32 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             context_settings={"help_option_names": ["-h", "--help"]},
         )
 
-        @self.app.command()
-        def generate_ci(
-            ciprovider: str = typer.Option("GitHub", help="Name of the CI/CD provider"),
-            space_name: str = typer.Option(
-                ..., "--space-name", "-sn", help="Name of the space"
-            ),
-            registry_name: str = typer.Option(
-                ..., "--registry-name", "-rn", help="Name of the registry"
-            ),
-            docker_context: str = typer.Option(
-                ..., "--context", "-c", help="Docker context"
-            ),
-            dockerfile_path: str = typer.Option(
-                ..., "--dockerfile-path", "-dfp", help="Dockerfile path"
-            ),
-        ):
-            rendered_template = render_cicd_jinja_template(
-                docker_context=docker_context,
-                dockerfile_path=dockerfile_path,
-                registry_name=registry_name,
-                space_name=space_name,
-            )
-            os.makedirs(".github/workflows", exist_ok=True)
+        # @self.app.command()
+        # def generate_ci(
+        #     ciprovider: str = typer.Option("GitHub", help="Name of the CI/CD provider"),
+        #     space_name: str = typer.Option(
+        #         ..., "--space-name", "-sn", help="Name of the space"
+        #     ),
+        #     registry_name: str = typer.Option(
+        #         ..., "--registry-name", "-rn", help="Name of the registry"
+        #     ),
+        #     docker_context: str = typer.Option(
+        #         ..., "--context", "-c", help="Docker context"
+        #     ),
+        #     dockerfile_path: str = typer.Option(
+        #         ..., "--dockerfile-path", "-dfp", help="Dockerfile path"
+        #     ),
+        # ):
+        #     rendered_template = render_cicd_jinja_template(
+        #         docker_context=docker_context,
+        #         dockerfile_path=dockerfile_path,
+        #         registry_name=registry_name,
+        #         space_name=space_name,
+        #     )
+        #     os.makedirs(".github/workflows", exist_ok=True)
 
-            with open(".github/workflows/main.yml", "w") as file:
-                file.write(rendered_template)
+        #     with open(".github/workflows/main.yml", "w") as file:
+        #         file.write(rendered_template)
 
         @self.app.command()
         def create(

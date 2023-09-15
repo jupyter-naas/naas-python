@@ -6,7 +6,6 @@ from naas_python.domains.space.SpaceSchema import (
     ISpaceInvoker,
     Space,
 )
-from naas_python.utils import render_cicd_jinja_template
 
 
 class SDKSpaceAdaptor(ISpaceInvoker):
@@ -39,21 +38,6 @@ class SDKSpaceAdaptor(ISpaceInvoker):
             else:
                 token = load_token_from_file()
         return NAASCredentials(token=token)
-
-    def generate_ci(
-        ciprovider, space_name, registry_name, docker_context, dockerfile_path
-    ):
-        rendered_template = render_cicd_jinja_template(
-            docker_context=docker_context,
-            dockerfile_path=dockerfile_path,
-            registry_name=registry_name,
-            space_name=space_name,
-        )
-
-        os.makedirs(".github/workflows", exist_ok=True)
-
-        with open(".github/workflows/main.yml", "w") as file:
-            file.write(rendered_template)
 
     def create(
         self,

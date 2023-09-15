@@ -1,0 +1,14 @@
+name: {{ workflow.name }}
+on:
+  push:
+    branches:
+      - main
+jobs:
+  {% for job in workflow.jobs %}
+  {{ job.name | lower | replace(' ', '-') }}:
+    name: {{ job.name }}
+    steps:
+      {% for step in job.steps %}
+      {{ step | safe }}
+      {% endfor %}
+  {% endfor %}
