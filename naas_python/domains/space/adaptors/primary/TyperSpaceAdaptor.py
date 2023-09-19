@@ -16,12 +16,15 @@ from typer.core import TyperGroup
 from typing_extensions import Annotated
 
 from naas_python.domains.space.adaptors.primary.utils import PydanticTableModel
-from naas_python.domains.space.SpaceSchema import ISpaceDomain, ISpaceInvoker, Space
+from naas_python.domains.space.SpaceSchema import (
+    ISpaceDomain,
+    ISpaceInvoker,
+    SpaceConflictError,
+)
+from naas_python.domains.registry.RegistrySchema import RegistryConflictError
 from naas_python.utils.cicd import Pipeline
-import docker
 
 logger = getLogger(__name__)
-docker_client = docker.from_env()
 
 
 class OrderCommands(TyperGroup):
@@ -53,7 +56,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         self.app.command()(self.get)
         self.app.command()(self.delete)
         self.app.command()(self.update)
-        # self.app.command()(self.add)
+        self.app.command()(self.add)
 
     def _list_preview(self, data: List[dict], headers: list):
         if not isinstance(data, list):
@@ -315,11 +318,20 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         generate_ci: bool = typer.Option(
             True, "--generate-ci", "-gci", help="Generate CI/CD configuration"
         ),
+        skip_registry: bool = typer.Option(
+            False, "--skip-registry", "-sr", help="Skip creating a Docker registry"
+        ),
         ci_type: str = typer.Option(
             "github-actions",
             "--ci-type",
             "-ct",
             help="Type of CI/CD configuration to generate",
+        ),
+        image: str = typer.Option(
+            None,
+            "--image",
+            "-i",
+            help="Image of the space, required if space_type 'docker' is not provided",
         ),
         cpu: str = typer.Option(
             2, "--cpu", "-c", help="CPU utilization for the Space container"
@@ -328,40 +340,64 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             "2Gi", "--memory", "-m", help="Memory utilization for the Space container"
         ),
     ):
+        """
+        Adds a new space and generates a CI/CD configuration for management. If requested, a new Docker registry will also be created and the CI/CD configuration will be updated accordingly.
+        """
         # Step 1: Create a new Docker registry on space.naas.ai
         registry_name = f"{space_name}-registry"
+        if not skip_registry:
+            with Progress() as progress:
+                registry_task = progress.add_task(
+                    "[cyan]Creating Docker Registry...", total=1
+                )
+                progress.update(registry_task, advance=0.25)
+                from naas_python.domains.registry.handlers.PythonHandler import (
+                    primaryAdaptor as RegistryHandler,
+                )
 
-        with Progress() as progress:
-            registry_task = progress.add_task(
-                "[cyan]Creating Docker Registry...", total=1
-            )
-            from naas_python.domains.registry.handlers import RegistryHandler
+                # Supposes that no registry exists for the given name, else retrieve it.
+                try:
+                    RegistryHandler.create(name=registry_name)
+                except RegistryConflictError:
+                    progress.print(
+                        f"[yellow]A registry with the name '{registry_name}' already exists. Proceeding with existing registry.[/yellow]"
+                    )
+                    RegistryHandler.get(name=registry_name)
 
-            _registry = RegistryHandler().create(name=registry_name)
+                progress.update(registry_task, advance=0.5)
 
-            # Get credentials for the registry (will create a credentials file if it doesn't exist)
-            _registry_credentials = RegistryHandler().get_credentials(
-                name=registry_name
-            )
+                # Get credentials for the registry (will create a credentials file if it doesn't exist)
+                RegistryHandler.get_credentials(name=registry_name)
+
+                progress.update(registry_task, advance=1)
 
         # Step 2: Create a new space on space.naas.ai
         with Progress() as progress:
             space_task = progress.add_task("[cyan]Creating Naas Space...", total=1)
-            _space = self.create(
-                name=space_name,
-                domain=f"{space_name}.naas.ai",
-                containers=[
-                    {
-                        "name": space_name,
-                        "image": f"{registry_name}/{space_name}",
-                        "env": {},
-                        "cpu": cpu,
-                        "memory": memory,
-                        "port": container_port,
-                    }
-                ],
-            )
-            space_task.completed = True
+            progress.update(space_task, advance=0.25)
+            try:
+                self.domain.create(
+                    name=space_name,
+                    domain=f"{space_name}.naas.ai",
+                    containers=[
+                        {
+                            "name": space_name,
+                            "image": image
+                            if image
+                            else f"{registry_name}/{space_name}",
+                            "env": {},
+                            "cpu": cpu,
+                            "memory": memory,
+                            "port": container_port,
+                        }
+                    ],
+                )
+            except SpaceConflictError as e:
+                progress.print(
+                    f"[yellow]A space with the name '{space_name}' already exists. Proceeding with existing space.[/yellow]"
+                )
+                self.domain.get(name=space_name)
+            progress.update(space_task, advance=1)
 
         # Step 3: Generate CI/CD configuration if requested
         if generate_ci:
@@ -404,17 +440,24 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                     "name: Check Naas Registry credentials",
                     "run: |",
                     f"  naas_python registry get-credentials --name { registry_name }",
-                    f"echo '$(cat {registry_name}-credentials.txt )' >> $GITHUB_OUTPUT",
+                    f"  echo '$(cat {registry_name}-credentials.txt )' >> $GITHUB_OUTPUT",
                 ],
             )
 
             # Add custom jobs for CI/CD configuration
             if space_type == "docker":
+                try:
+                    _build_command = f"  docker build -t {registry_name}/{space_name} -f {dockerfile_path} {docker_context}"
+                except ValueError as e:
+                    raise ValueError(
+                        "When space_type is 'docker', dockerfile_path and docker_context must be provided. Please provide these values and try again"
+                    ) from e
+
                 docker_steps = [
                     "name: Build and Push Docker Image",
                     f'if: ${{ github.event_name == "push" }}',
                     "run: |",
-                    "  docker build -t {{ registry_name }}/{{ space_name }} -f {{ dockerfile_path }} {{ docker_context }}",
+                    _build_command,
                     "  docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD",
                     "  docker push {{ registry_name }}/{{ space_name }}",
                 ]
@@ -424,32 +467,3 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             pipeline.render()
 
             self.console.print("[green]Generated CI/CD configuration.[/green]")
-        else:
-            # If generate_ci is not passed, build the Docker image using the docker package
-            if space_type == "docker" and dockerfile_path and docker_context:
-                self.console.print("[cyan]Building Docker Image...[/cyan]")
-                try:
-                    image, _ = docker_client.images.build(
-                        path=docker_context,
-                        dockerfile=dockerfile_path,
-                        tag=f"{registry_name}/{space_name}",
-                    )
-                    self.console.print(
-                        "[green]Docker Image Built Successfully![/green]"
-                    )
-                    # Push the image
-                    docker_client.images.push(
-                        repository=f"{registry_name}/{space_name}",
-                        tag="latest",
-                        auth_config={
-                            "username": _registry_credentials.username,
-                            "password": _registry_credentials.password,
-                        },
-                    )
-
-                except docker.errors.BuildError:
-                    self.console.print("[red]Failed to Build Docker Image![/red]")
-                    return
-                except docker.errors.APIError:
-                    self.console.print("[red]Failed to Push Docker Image![/red]")
-                    return

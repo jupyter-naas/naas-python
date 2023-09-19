@@ -1,7 +1,9 @@
+from pathlib import Path
 from .utils.log import initialize_logging
 
 logger = initialize_logging()
 
+__ROOT_DIR__ = Path(__file__).parents[1].absolute()
 
 # If the package is run as a script, run the main function to load the CLI.
 if __name__ == "__main__":

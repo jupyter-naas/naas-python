@@ -1,10 +1,16 @@
 from jinja2 import Environment, FileSystemLoader
+import os
+from naas_python import __ROOT_DIR__
 
 
 class Job:
     def __init__(self, name, steps):
         self.name = name
         self.steps = steps
+
+    def steps_as_list(self):
+        # Convert steps to a list with each item as a separate line
+        return [f"          {step}" for step in self.steps]
 
 
 class Workflow:
@@ -13,7 +19,7 @@ class Workflow:
         self.jobs = jobs
 
     def generate_yaml(self, template_path):
-        env = Environment(loader=FileSystemLoader("."))
+        env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)))
         template = env.get_template(template_path)
         return template.render(workflow=self)
 
@@ -51,4 +57,10 @@ class Pipeline:
         )
 
         # Generate the YAML content using the template
-        return workflow.generate_yaml(self._workflow_template_path)
+        _rendered_yaml = workflow.generate_yaml(self._workflow_template_path)
+
+        # Adjust the filename
+        filename = f"{self.name.replace(' ', '-')}.yaml"
+
+        with open(f"{__ROOT_DIR__}/.github/workflows/{filename}", "w") as f:
+            f.write(_rendered_yaml)

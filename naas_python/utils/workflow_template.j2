@@ -1,14 +1,18 @@
 name: {{ workflow.name }}
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  {% for job in workflow.jobs %}
-  {{ job.name | lower | replace(' ', '-') }}:
-    name: {{ job.name }}
+  {{ workflow.name | lower | replace(' ', '-') }}:
+    runs-on: ubuntu-latest
     steps:
-      {% for step in job.steps %}
-      {{ step | safe }}
+      {% for job in workflow.jobs %}
+      - name: {{ job.name }}
+        run: |
+          {% for step in job.steps %}
+          {{ step | indent(12) }}
+          {% endfor %}
       {% endfor %}
-  {% endfor %}
