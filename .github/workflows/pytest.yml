@@ -30,9 +30,9 @@ jobs:
         run: |
           pip install pytest pydantic
 
-      - name: Install naas-models
-        run: |
-          pip install git+https://github.com/jupyter-naas/naas-models.git#subdirectory=python
+      # - name: Install naas-models
+      #   run: |
+      #     pip install git+https://github.com/jupyter-naas/naas-models.git#subdirectory=python
 
       - name: Install main package
         run: |
