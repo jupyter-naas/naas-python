@@ -1,0 +1,44 @@
+name: Pytest
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    container:
+      image: condaforge/miniforge3:latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Checkout naas-models
+        uses: actions/checkout@v2
+        with:
+          repository: jupyter-naas/naas-models
+          path: naas_models
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Install package dependencies
+        run: |
+          pip install pytest pydantic
+
+      - name: Install naas-models
+        run: |
+          pip install git+https://github.com/jupyter-naas/naas-models.git#subdirectory=python
+
+      - name: Install main package
+        run: |
+          pip install -e .[dev]
+
+      - name: pytest
+        run: |
+          pytest tests
+

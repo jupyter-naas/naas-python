@@ -1,6 +1,7 @@
-from .utils import CLILogger
+from .utils.log import initialize_logging
 
-logger = CLILogger().logger
+logger = initialize_logging()
+
 
 # If the package is run as a script, run the main function to load the CLI.
 if __name__ == "__main__":
@@ -8,7 +9,11 @@ if __name__ == "__main__":
 
     main()
 else:
-    # Else use it as a libary.
+    # Else use it as a library.
     from .domains.space.handlers.PythonHandler import primaryAdaptor as __space
 
     space = __space
+
+    from .domains.registry.handlers.PythonHandler import primaryAdaptor as __registry
+
+    registry = __registry

@@ -1,8 +1,9 @@
+# Exception
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
 from typing import Any
 
-from naas_models.pydantic.space_p2p import *
+from naas_models.pydantic.registry_p2p import *
 
 from naas_python.utils.exceptions import NaasException
 
@@ -11,48 +12,44 @@ logger = getLogger(__name__)
 # Secondary adaptor
 
 
-class ISpaceAdaptor(metaclass=ABCMeta):
+class IRegistryAdaptor(metaclass=ABCMeta):
     @abstractmethod
-    def update_space(self, **kwargs) -> dict:
+    def create_registry(self, **kwargs) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def create_space(self, **kwargs) -> dict:
+    def get_registry_by_name(self, **kwargs) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def get_space_by_name(self, **kwargs) -> dict:
+    def list_registries(self, **kwargs) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def list_spaces(self, **kwargs) -> dict:
+    def delete_registry(self, **kwargs) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_space(self, **kwargs) -> dict:
+    def get_registry_credentials(self, **kwargs) -> dict:
         raise NotImplementedError
 
 
 # Domain
 
 
-class ISpaceDomain(metaclass=ABCMeta):
-    adaptor: ISpaceAdaptor
+class IRegistryDomain(metaclass=ABCMeta):
+    adaptor: IRegistryAdaptor
 
     @abstractmethod
-    def create(self, **kwargs) -> Space:
+    def list(self, **kwargs) -> RegistryListResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, **kwargs) -> SpaceUpdateResponse:
+    def create(self, **kwargs) -> RegistryCreationResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, **kwargs) -> Space:
-        raise NotImplementedError
-
-    @abstractmethod
-    def list(self, **kwargs) -> SpaceListResponse:
+    def get_registry_by_name(self, **kwargs) -> RegistryGetResponse:
         raise NotImplementedError
 
     @abstractmethod
@@ -60,20 +57,20 @@ class ISpaceDomain(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def add(self):
+    def get_credentials(self, **kwargs) -> RegistryCredentialsResponse:
         raise NotImplementedError
 
 
 # Primary Adaptor
 
 
-class ISpaceInvoker(metaclass=ABCMeta):
+class IRegistryInvoker(metaclass=ABCMeta):
     @abstractmethod
-    def create(self, **kwargs):
+    def list(self, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, **kwargs):
+    def create(self, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
@@ -81,28 +78,24 @@ class ISpaceInvoker(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def list(self, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
     def delete(self, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def add(self, **kwargs):
+    def get_credentials(self, **kwargs):
         raise NotImplementedError
 
 
 # Exceptions
 
 
-class SpaceValidationError(NaasException):
+class RegistryValidationError(NaasException):
     pass
 
 
-class SpaceConflictError(NaasException):
+class RegistryNotFound(NaasException):
     pass
 
 
-class SpaceNotFound(NaasException):
+class RegistryConflictError(NaasException):
     pass
