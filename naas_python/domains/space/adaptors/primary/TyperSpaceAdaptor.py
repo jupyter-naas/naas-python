@@ -275,11 +275,11 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
             data.append(list(_space_dict.values()))  # Append a list of values to data
 
-        headers = [key.upper() for key in _space_dict.keys()]
-
         if len(data) == 0:
             print("No matching results found.")
             return
+
+        headers = [key.upper() for key in _space_dict.keys()]
 
         if rich_preview:
             # Create a Rich Table
