@@ -9,6 +9,7 @@ from click import Context
 from rich.console import Console
 from rich.table import Table
 from typer.core import TyperGroup
+import os
 
 from naas_python.domains.registry.RegistrySchema import (
     IRegistryDomain,
@@ -47,6 +48,7 @@ class TyperRegistryAdaptor(IRegistryInvoker):
         self.app.command()(self.get)
         self.app.command()(self.delete)
         self.app.command()(self.get_credentials)
+        self.app.command()(self.docker_login)
 
     def _list_preview(self, data: List[dict], headers: list):
         if not isinstance(data, list):
@@ -215,3 +217,25 @@ class TyperRegistryAdaptor(IRegistryInvoker):
         self.console.print(
             Panel.fit(f"Registry credentials saved to '{name}-credentials.txt'")
         )
+    
+    def docker_login(
+        self,
+        name: str = typer.Option(
+            ..., "--name", "-n", help="Docker login for registry"
+        ),
+    ):
+        """Execute Docker login for the specified registry"""
+        registry = self.domain.get_registry_by_name(name=name)
+  
+        uri = registry.registry.uri
+        response = self.domain.get_credentials(name=name)
+        username = response.credentials.username
+        password = response.credentials.password
+
+
+        exec_code = os.system(f"echo '{password}' | docker login --username '{username}' --password-stdin '{uri}'")
+        if exec_code == 0:
+            self.console.print(
+                Panel.fit(f"You can now push containers to '{uri}'")
+            )
+
