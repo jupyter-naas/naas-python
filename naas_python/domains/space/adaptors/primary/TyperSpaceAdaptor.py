@@ -366,21 +366,42 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
                 # Supposes that no registry exists for the given name, else retrieve it.
                 try:
-                    RegistryHandler.create(name=registry_name)
+                    registry = RegistryHandler.create(name=registry_name)
                 except RegistryConflictError:
                     progress.print(
                         f"[yellow]A registry with the name '{registry_name}' already exists. Proceeding with existing registry.[/yellow]"
                     )
-                    RegistryHandler.get(name=registry_name)
+                    registry = RegistryHandler.get(name=registry_name)
 
                 progress.update(registry_task, advance=0.5)
 
                 # Get credentials for the registry (will create a credentials file if it doesn't exist)
-                RegistryHandler.get_credentials(name=registry_name)
+                # and set up docker login for the registry (if type is docker)
+                if space_type == "docker":
+                    progress.print(
+                        f"[cyan]Retrieving credentials for Docker Registry...[/cyan]"
+                    )
+                    RegistryHandler.get_credentials(name=registry_name)
+                    progress.update(registry_task, advance=0.75)
 
                 progress.update(registry_task, advance=1)
 
-        # Step 2: Create a new space on space.naas.ai
+        # Step 2.a: Build and push image to registry container if requested:
+        if space_type == "docker":
+            with Progress() as progress:
+                build_task = progress.add_task(
+                    "[cyan]Building Docker Image...", total=1
+                )
+                os.system(
+                    f"docker build -t {registry.uri}:latest -f {dockerfile_path} {docker_context}"
+                )
+                progress.update(build_task, advance=0.5)
+
+                push_task = progress.print("[cyan]Pushing Docker Image...", total=1)
+                os.system(f"docker push {registry.uri}:latest")
+                progress.update(push_task, advance=1)
+
+        # Step 2.b: Create a new space on space.naas.ai
         with Progress() as progress:
             space_task = progress.add_task("[cyan]Creating Naas Space...", total=1)
             progress.update(space_task, advance=0.25)
@@ -391,9 +412,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                     containers=[
                         {
                             "name": space_name,
-                            "image": image
-                            if image
-                            else f"{registry_name}/{space_name}",
+                            "image": image if image else f"{registry.uri}:latest",
                             "env": {},
                             "cpu": cpu,
                             "memory": memory,
@@ -442,21 +461,20 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 ],
             )
 
-            # Check Naas Registry credentials
-            pipeline.add_job(
-                "Check Naas Registry credentials and add to output",
-                [
-                    "name: Check Naas Registry credentials",
-                    "run: |",
-                    f"  naas_python registry get-credentials --name { registry_name }",
-                    f"  echo '$(cat {registry_name}-credentials.txt )' >> $GITHUB_OUTPUT",
-                ],
-            )
-
             # Add custom jobs for CI/CD configuration
             if space_type == "docker":
+                # Retrieve credentials from registry and login into docker
+                pipeline.add_job(
+                    "Login to Docker Registry",
+                    [
+                        "name: Login to Docker Registry",
+                        "run: |",
+                        f"  naas_python registry docker-login --name { registry_name }",
+                    ],
+                )
+
                 try:
-                    _build_command = f"  docker build -t {registry_name}/{space_name} -f {dockerfile_path} {docker_context}"
+                    _build_command = f"  docker build -t {registry.uri}:latest -f {dockerfile_path} {docker_context}"
                 except ValueError as e:
                     raise ValueError(
                         "When space_type is 'docker', dockerfile_path and docker_context must be provided. Please provide these values and try again"
@@ -467,8 +485,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                     f'if: ${{ github.event_name == "push" }}',
                     "run: |",
                     _build_command,
-                    "  docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD",
-                    "  docker push {{ registry_name }}/{{ space_name }}",
+                    f"  docker push { registry.uri }:latest",
                 ]
                 pipeline.add_job("Build and Push Docker Image", docker_steps)
 

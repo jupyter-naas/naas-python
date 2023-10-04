@@ -1,10 +1,14 @@
+import os
+
+from rich.panel import Panel
+
 from naas_python.domains.registry.RegistrySchema import (
     IRegistryDomain,
     IRegistryInvoker,
     RegistryCreationResponse,
-    RegistryListResponse,
-    RegistryGetResponse,
     RegistryCredentialsResponse,
+    RegistryGetResponse,
+    RegistryListResponse,
 )
 
 
@@ -37,3 +41,18 @@ class SDKRegistryAdaptor(IRegistryInvoker):
         """Get access credentials for registry"""
         credentials = self.domain.get_credentials(name=name)
         return credentials
+
+    def docker_login(self, name="") -> None:
+        """Execute Docker login for the specified registry"""
+        registry = self.domain.get_registry_by_name(name=name)
+
+        uri = registry.registry.uri
+        response = self.domain.get_credentials(name=name)
+        username = response.credentials.username
+        password = response.credentials.password
+
+        exec_code = os.system(
+            f"echo '{password}' | docker login --username '{username}' --password-stdin '{uri}'"
+        )
+        if exec_code == 0:
+            self.console.print(Panel.fit(f"You can now push containers to '{uri}'"))
