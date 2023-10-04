@@ -321,6 +321,11 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         skip_registry: bool = typer.Option(
             False, "--skip-registry", "-sr", help="Skip creating a Docker registry"
         ),
+        registry_name: str = typer.Option(
+            None,
+            "--registry-name",
+            help="Name of the registry, required if skip_registry is False",
+        ),
         ci_type: str = typer.Option(
             "github-actions",
             "--ci-type",
@@ -341,10 +346,14 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         ),
     ):
         """
-        Adds a new space and generates a CI/CD configuration for management. If requested, a new Docker registry will also be created and the CI/CD configuration will be updated accordingly.
+        Adds a new space and generates a CI/CD configuration for management.
+        If requested, a new Docker registry will also be created and the CI/CD
+        configuration will be updated accordingly.
         """
-        # Step 1: Create a new Docker registry on space.naas.ai
-        registry_name = f"{space_name}-registry"
+        registry_name = registry_name if registry_name else f"{space_name}-registry"
+
+        # Step 1: Create a new Registry on space.naas.ai if requested
+
         if not skip_registry:
             with Progress() as progress:
                 registry_task = progress.add_task(
