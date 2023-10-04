@@ -128,7 +128,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                 {
                     "name": name,
                     "image": image,
-                    "env": json.loads(env) if env else None,
+                    "env": json.loads(env) if env else {},
                     "cpu": cpu,
                     "memory": memory,
                     "port": port,
@@ -312,6 +312,9 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         docker_context: str = typer.Option(
             None, "--docker-context", "-dc", help="Path to the Docker context"
         ),
+        image_tag: str = typer.Option(
+            "latest", "--image-tag", "-it", help="Tag for the Docker image"
+        ),
         container_port: str = typer.Option(
             5080, "--container-port", "-cp", help="Port for the Space container"
         ),
@@ -366,12 +369,14 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
                 # Supposes that no registry exists for the given name, else retrieve it.
                 try:
-                    registry = RegistryHandler.create(name=registry_name)
+                    _r = RegistryHandler.create(name=registry_name)
+                    registry = _r.registry
                 except RegistryConflictError:
                     progress.print(
                         f"[yellow]A registry with the name '{registry_name}' already exists. Proceeding with existing registry.[/yellow]"
                     )
-                    registry = RegistryHandler.get(name=registry_name)
+                    _r = RegistryHandler.get(name=registry_name)
+                    registry = _r.registry
 
                 progress.update(registry_task, advance=0.5)
 
@@ -381,7 +386,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                     progress.print(
                         f"[cyan]Retrieving credentials for Docker Registry...[/cyan]"
                     )
-                    RegistryHandler.get_credentials(name=registry_name)
+                    RegistryHandler.docker_login(name=registry_name)
                     progress.update(registry_task, advance=0.75)
 
                 progress.update(registry_task, advance=1)
@@ -393,38 +398,35 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                     "[cyan]Building Docker Image...", total=1
                 )
                 os.system(
-                    f"docker build -t {registry.uri}:latest -f {dockerfile_path} {docker_context}"
+                    f"docker build -t my_docker_image -f {dockerfile_path} {docker_context}"
                 )
+                os.system(f"docker tag my_docker_image {registry.uri}:{image_tag}")
                 progress.update(build_task, advance=0.5)
 
-                push_task = progress.print("[cyan]Pushing Docker Image...", total=1)
-                os.system(f"docker push {registry.uri}:latest")
-                progress.update(push_task, advance=1)
+                progress.print("[cyan]Pushing Docker Image... [/cyan]")
+                os.system(f"docker push {registry.uri}:{image_tag}")
+                progress.update(build_task, advance=1)
 
         # Step 2.b: Create a new space on space.naas.ai
         with Progress() as progress:
             space_task = progress.add_task("[cyan]Creating Naas Space...", total=1)
             progress.update(space_task, advance=0.25)
             try:
-                self.domain.create(
+                self.create(
                     name=space_name,
+                    image=image if image else f"{registry.uri}:{image_tag}",
                     domain=f"{space_name}.naas.ai",
-                    containers=[
-                        {
-                            "name": space_name,
-                            "image": image if image else f"{registry.uri}:latest",
-                            "env": {},
-                            "cpu": cpu,
-                            "memory": memory,
-                            "port": container_port,
-                        }
-                    ],
+                    env={},
+                    cpu=cpu,
+                    memory=memory,
+                    port=container_port,
+                    rich_preview=False,
                 )
             except SpaceConflictError as e:
                 progress.print(
                     f"[yellow]A space with the name '{space_name}' already exists. Proceeding with existing space.[/yellow]"
                 )
-                self.domain.get(name=space_name)
+                self.get(name=space_name, rich_preview=False)
             progress.update(space_task, advance=1)
 
         # Step 3: Generate CI/CD configuration if requested
@@ -492,4 +494,4 @@ class TyperSpaceAdaptor(ISpaceInvoker):
             # Render the CI/CD configuration
             pipeline.render()
 
-            self.console.print("[green]Generated CI/CD configuration.[/green]")
+            progress.print("[green]Generated CI/CD configuration.[/green]")

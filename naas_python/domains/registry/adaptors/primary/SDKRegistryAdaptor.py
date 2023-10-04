@@ -1,6 +1,7 @@
 import os
 
 from rich.panel import Panel
+from rich import print as rprint
 
 from naas_python.domains.registry.RegistrySchema import (
     IRegistryDomain,
@@ -55,4 +56,4 @@ class SDKRegistryAdaptor(IRegistryInvoker):
             f"echo '{password}' | docker login --username '{username}' --password-stdin '{uri}'"
         )
         if exec_code == 0:
-            self.console.print(Panel.fit(f"You can now push containers to '{uri}'"))
+            rprint(Panel.fit(f"You can now push containers to '{uri}'"))
