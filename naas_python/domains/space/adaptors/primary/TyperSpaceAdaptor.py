@@ -94,7 +94,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         image: str = typer.Option(..., "--image", help="Image of the space"),
         domain: str = typer.Option("", "--domain", "-d", help="Domain of the space"),
         env: str = typer.Option(
-            None,
+            {},
             "--env",
             help="Environment variables for the Space container",
         ),
@@ -262,6 +262,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         space_list = self.domain.list(page_size=page_size, page_number=page_number)
 
         data = []
+        headers = []
 
         # Extract the data and headers
         for space in space_list.spaces:
@@ -274,6 +275,8 @@ class TyperSpaceAdaptor(ISpaceInvoker):
                     _space_dict[key] = str(value)
 
             data.append(list(_space_dict.values()))  # Append a list of values to data
+
+            headers = [key.upper() for key in _space_dict.keys()]
 
         if len(data) == 0:
             print("No matching results found.")
