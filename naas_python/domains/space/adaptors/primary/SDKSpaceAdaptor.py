@@ -7,7 +7,7 @@ from naas_python.domains.space.SpaceSchema import (
     ISpaceInvoker,
     SpaceConflictError,
 )
-from naas_python.utils.cicd import Pipeline
+from naas_python.utils.cicd.github import Pipeline
 
 
 class SDKSpaceAdaptor(ISpaceInvoker):

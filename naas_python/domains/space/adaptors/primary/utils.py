@@ -1,7 +1,10 @@
+from contextlib import contextmanager
 from typing import List
-from pydantic import BaseModel
-from rich.table import Table
+
 import rich
+from pydantic import BaseModel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 
 class PydanticTableModel:
@@ -38,3 +41,63 @@ class PydanticTableModel:
             max_length = max([len(piece) for piece in pieces])
             splitter = "-" * max_length
             rich.print(f"{splitter}\n{''.join(pieces)}{splitter}")
+
+
+class CustomProgress:
+    def __init__(self, mode="plain"):
+        self.mode = mode
+        self.progress = None
+
+    @contextmanager
+    def __enter__(self):
+        if self.mode == "rich":
+            self.progress = Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                transient=True,
+            )
+            yield self.progress
+        else:
+
+            class PlainProgress:
+                def __init__(self):
+                    self.task_description = ""
+
+                def add_task(self, description, total):
+                    print(description)
+                    self.task_description = description
+
+                def update(self, task, description=None, advance=None):
+                    if description:
+                        self.task_description = description
+                    if advance is not None:
+                        print(f"{self.task_description} ({advance * 100:.0f}%)")
+
+            self.progress = PlainProgress()
+            yield self.progress
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.progress:
+            self.progress.stop()
+
+
+# TODO: Remove this function, now replaced by the above class
+def update_progress(task, description, advance, mode) -> None:
+    """
+    Update a progress task based on the specified mode.
+
+    Args:
+        task (Task): The progress task to update.
+        description (str): The description to set for the task.
+        advance (float): The advance value for the task (0.0 to 1.0).
+        mode (str): The mode to determine how to update the progress.
+            - "plain": Print the description as plain text.
+            - "rich": Update the task description with rich progress.
+
+    Returns:
+        None
+    """
+    if mode == "plain":
+        print(description)
+    else:
+        task.update(description=description, advance=advance)

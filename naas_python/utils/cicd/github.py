@@ -28,7 +28,7 @@ class Pipeline:
     def __init__(self, name):
         self.name = name
         self.extra_steps = []
-        self._workflow_template_path = "workflow_template.j2"
+        self._workflow_template_path = "templates/workflow_template.j2"
 
     def add_job(self, name, steps):
         job = Job(name, steps)
