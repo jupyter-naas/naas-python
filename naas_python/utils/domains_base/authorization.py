@@ -152,13 +152,14 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         self,
         port=8080,
         trade_url="https://auth.naas.ai/bearer/workspace/longlived",
-        timeout=60,
+        timeout=5,  # 60,
         login_url="https://naas.ai?cli_token=generate_token",
     ):
         self._access_token = None
         self._jwt_token = None
         self.port = port
         self._server = None
+        # TODO: Fix bug where the async call during dev mode, only finishes after the exact timeout period
         self._timeout = timeout
         self.trade_url = trade_url
         self._login_url = login_url
@@ -308,6 +309,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
             # If file is "encoded/encrypted" run decoding/decryption process
             # ...
         # Run contents validation...
+        self._file_contents = json.loads(self._file_contents)
         return self._file_contents
 
     def _generate_credential_file(self, credentials_file_path: Path):

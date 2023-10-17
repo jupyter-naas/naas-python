@@ -8,20 +8,21 @@ from requests.exceptions import ConnectionError
 
 from naas_python.domains.space.SpaceSchema import (
     ISpaceAdaptor,
-    SpaceValidationError,
     SpaceConflictError,
     SpaceNotFound,
+    SpaceValidationError,
 )
+from naas_python.utils.domains_base.authorization import NaasSpaceAuthenticatorAdapter
+from naas_python.utils.domains_base.secondary.BaseAPIAdaptor import BaseAPIAdaptor
 
 logger = getLogger(__name__)
-from naas_python.utils.domains_base.secondary.BaseAPIAdaptor import BaseAPIAdaptor
 
 
 class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
     def __init__(self):
         super().__init__()
-        # TODO: proper authorization validation utility function
-        self._authorization_token = getenv("NAAS_PYTHON_API_TOKEN")
+        self.authenticator = NaasSpaceAuthenticatorAdapter()
+        self._authorization_token = self.authenticator.jwt_token
 
     @BaseAPIAdaptor.service_status_decorator
     def create_space(self, name, domain, containers) -> dict:
