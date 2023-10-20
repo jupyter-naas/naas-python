@@ -1,6 +1,6 @@
 import os
-from logging import getLogger
 from typing import Any, Union
+import logging
 
 import requests
 from cachetools.func import ttl_cache
@@ -9,8 +9,6 @@ from urllib3.exceptions import MaxRetryError, NewConnectionError
 
 from naas_python.utils.domains_base.authorization import NaasSpaceAuthenticatorAdapter
 from naas_python.utils.exceptions import NaasException
-
-logger = getLogger(__name__)
 
 
 class ServiceAuthenticationError(NaasException):
@@ -28,7 +26,6 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
     cache_expire_after = 60  # Cache expires after 60 seconds
 
     def __init__(self) -> None:
-        self.logger = getLogger(__name__)
         # Base authenticator class
         super().__init__()
 
@@ -38,11 +35,11 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
         Check the status of the service API before executing other methods.
         """
         try:
-            self.logger.debug(f"API Base URL: {self.host}")
+            logging.debug(f"API Base URL: {self.host}")
 
             api_response = requests.get(f"{self.host}")
 
-            self.logger.debug(
+            logging.debug(
                 f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
             )
 

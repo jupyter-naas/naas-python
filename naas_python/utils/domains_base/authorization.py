@@ -14,9 +14,9 @@ import requests
 import urllib3
 
 # Configure logging
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+# logging.basicConfig(
+#     level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+# )
 
 
 @dataclass
@@ -56,7 +56,6 @@ class CustomHandler(BaseHTTPRequestHandler):
         if post_data:
             data = json.loads(post_data.decode("utf-8"))
             self.server.set_data(data)
-            logging.debug(f"Received POST data: {data}")
         else:
             logging.debug("No POST data received.")
 
@@ -207,7 +206,9 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
                     # Create a connection pool using urllib3
                     with urllib3.PoolManager() as http:
                         response = http.request(
-                            "POST", self._redirect_uri, body=json.dumps(data)
+                            "POST",
+                            self._redirect_uri,
+                            body=json.dumps(data),
                         )
                         post_result = response.data
                     return post_result
@@ -374,7 +375,9 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
             return json.loads(result).get("access_token")
         else:
             print(response)
-            raise Exception("Token trade failed.")
+            raise Exception(
+                f"Token trade failed. Reason: {json.loads(response.text).get('detail')}"
+            )
 
     def jwt_token(self):
         if not self._jwt_token:
