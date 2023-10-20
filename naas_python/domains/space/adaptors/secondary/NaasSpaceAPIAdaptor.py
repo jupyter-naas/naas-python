@@ -12,7 +12,6 @@ from naas_python.domains.space.SpaceSchema import (
     SpaceNotFound,
     SpaceValidationError,
 )
-from naas_python.utils.domains_base.authorization import NaasSpaceAuthenticatorAdapter
 from naas_python.utils.domains_base.secondary.BaseAPIAdaptor import BaseAPIAdaptor
 
 logger = getLogger(__name__)
@@ -21,8 +20,6 @@ logger = getLogger(__name__)
 class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
     def __init__(self):
         super().__init__()
-        self.authenticator = NaasSpaceAuthenticatorAdapter()
-        self._authorization_token = self.authenticator.jwt_token
 
     @BaseAPIAdaptor.service_status_decorator
     def create_space(self, name, domain, containers) -> dict:
@@ -36,7 +33,6 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
             payload=json.dumps(
                 {"name": name, "domain": domain, "containers": containers}
             ),
-            token=self._authorization_token,
         )
 
         self.logger.debug(
@@ -49,11 +45,7 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         _url = f"{self.host}/space/{name}"
         self.logger.debug(f"get request url: {_url}")
 
-        api_response = self.make_api_request(
-            requests.get,
-            f"{self.host}/space/{name}",
-            token=self._authorization_token,
-        )
+        api_response = self.make_api_request(requests.get, f"{self.host}/space/{name}")
 
         self.logger.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
@@ -70,7 +62,6 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         api_response = self.make_api_request(
             requests.get,
             _url,
-            token=self._authorization_token,
         )
         self.logger.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
@@ -94,7 +85,6 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
             requests.put,
             _url,
             payload=json.dumps(payload),
-            token=self._authorization_token,
         )
 
         self.logger.debug(
@@ -110,7 +100,6 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         api_response = self.make_api_request(
             requests.delete,
             _url,
-            token=self._authorization_token,
         )
 
         self.logger.debug(

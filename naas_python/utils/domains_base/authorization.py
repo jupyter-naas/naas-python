@@ -268,10 +268,13 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
                     "Running in a non-production environment. Sending a mock POST request."
                 )
                 try:
+                    if not os.getenv("NAAS_MOCK_TOKEN"):
+                        raise Exception(
+                            "NAAS_MOCK_TOKEN environment variable not set. When running with NAAS_ENVIRONMENT_MODE=test, you must set NAAS_MOCK_TOKEN to a valid token."
+                        )
                     response = self._handle_mock_post(
-                        TokenResponse(code="1f3aa7383589491b9ed2f14cb4e2ab50").raw
+                        TokenResponse(code=os.getenv("NAAS_MOCK_TOKEN")).raw
                     )
-                    logging.info(f"Mock response: {response}")
                 except Exception as e:
                     raise e
 
@@ -283,9 +286,8 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         # Proceed with registering the token into the credentials file (following the model described above)
         return access_token
 
-    @property
     def access_token(self):
-        if self._access_token is None:
+        if not self._access_token:
             self._access_token = self._request_token()
         return self._access_token
 
@@ -315,7 +317,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
     def _generate_credential_file(self, credentials_file_path: Path):
         # Trade access token (and authenticate) and store the long-lived token in the credentials file
 
-        self._jwt_token = self.trade_for_long_lived_token(self.access_token)
+        self._jwt_token = self.trade_for_long_lived_token(self.access_token())
 
         with open(credentials_file_path, "w") as file:
             file.write(json.dumps({"jwt_token": self._jwt_token}))
@@ -336,9 +338,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         if credentials_path.exists() and credentials_path.is_file():
             # First order option for credential gathering is to check the file contents and grab the token
             credentials = self._gather_file_credentials(credentials_path)
-            logging.debug(
-                f"Credentials file found and not empty. Contents are  {credentials}"
-            )
+            logging.debug(f"Credentials file found and not empty.")
             credentials.update(self._gather_env_credentials())
 
             # If environment variable is present, override file contents
@@ -362,14 +362,11 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         if not self._jwt_token:
             raise Exception("Could not find any credentials to authenticate with.")
 
-    def trade_for_long_lived_token(self, access_token, token_type: str = "jupyterhub"):
+    def trade_for_long_lived_token(self, access_token):
         # headers = {"Authorization": f"Bearer {access_token}"}
-        if token_type == "jupyterhub":
-            self.trade_url = (
-                f"https://auth.naas.ai/bearer/jupyterhubtoken/?token={access_token}"
-            )
+        url = f"{self.trade_url}/?token={access_token}"
 
-        response = requests.get(self.trade_url)
+        response = requests.get(url)
 
         if response.status_code == 200:
             result = response.text
@@ -379,29 +376,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
             print(response)
             raise Exception("Token trade failed.")
 
-    @property
     def jwt_token(self):
-        if self._jwt_token:
-            return self._jwt_token
-        else:
-            # Check credentials which is responsible for gathering token
-            # (from credentials file or authentication process)
+        if not self._jwt_token:
             self.check_credentials()
-            return self._jwt_token
-
-    # def main(self):
-    #     token = self.access_token
-    #     # Continue with other CLI operations
-    #     print("My token is: ", token)
-
-    #     # Check jwt_token
-    #     jwt = self.jwt_token
-    #     print("My jwt_token is: ", jwt)
-
-    #     # Remove credentials file
-    #     credentials_path = Path(os.path.expanduser("~/.naas/credentials"))
-    #     if credentials_path.exists() and credentials_path.is_file():
-    #         credentials_path.unlink()
-    #         print("Credentials file removed.")
-    #     else:
-    #         print("Credentials file not found.")
+        return self._jwt_token

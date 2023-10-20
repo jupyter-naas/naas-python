@@ -9,15 +9,14 @@ from naas_python.domains.registry.RegistrySchema import (
     RegistryNotFound,
     RegistryValidationError,
 )
-from naas_python.utils.domains_base.authorization import NaasSpaceAuthenticatorAdapter
 from naas_python.utils.domains_base.secondary.BaseAPIAdaptor import BaseAPIAdaptor
 
 
 class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     def __init__(self):
         super().__init__()
-        self.authenticator = NaasSpaceAuthenticatorAdapter()
-        self._authorization_token = self.authenticator.jwt_token
+        # self.authenticator = NaasSpaceAuthenticatorAdapter()
+        # self._authorization_token = self.authenticator.jwt_token
 
     @BaseAPIAdaptor.service_status_decorator
     def create_registry(self, name) -> dict:
