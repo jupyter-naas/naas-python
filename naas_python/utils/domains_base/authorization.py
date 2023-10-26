@@ -19,6 +19,9 @@ import urllib3
 # )
 
 
+class TimeoutException(Exception): 
+    pass
+
 @dataclass
 class TokenResponse:
     code: str = None
@@ -118,6 +121,11 @@ class AuthenticatorBaseServer(ThreadingHTTPServer):
     def handle_timeout(self):
         self.server_close()
 
+    def handle_timeout(self):
+        """Called if no new request arrives within self.timeout.
+        """
+        raise TimeoutException()
+
     def _gather_result(self):
         while not self.data:
             try:
@@ -132,6 +140,10 @@ class AuthenticatorBaseServer(ThreadingHTTPServer):
 
             except IOError:
                 self._handle_exception(400, "invalid_request", "IOError")
+                break
+            except TimeoutException as e:
+                if not self.data:
+                    raise e
                 break
             except Exception as e:
                 self._handle_exception(500, "server_error", "Internal Server Error")
@@ -282,12 +294,14 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
 
             _environment_mode = os.getenv("NAAS_ENVIRONMENT_MODE", "production")
             if _environment_mode == "production":
-                print(f'🌐 Opening {self._login_url} to automatically generate your CLI token.')
+                print(f'\n\t🌐 Opening {self._login_url} to automatically generate your CLI token.')
                 if not webbrowser.open(self._login_url):
                     logging.debug("Failed to open the browser.")
                     print(f'⚠️ Not able to open your browser automatically. Please go to {self._login_url} ⚠️')
                     #return None
                 response = server._gather_result()
+
+
 
             else:
                 # In a non-production environment (test), send a mock POST request
@@ -344,23 +358,28 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
 
     def _generate_credential_file(self, credentials_file_path: Path):
         # Trade access token (and authenticate) and store the long-lived token in the credentials file
+        try:
+            self._jwt_token = self.trade_for_long_lived_token(self.access_token())
 
-        self._jwt_token = self.trade_for_long_lived_token(self.access_token())
+            # Create target directory in case it does not exists.
+            os.makedirs(
+                '/'.join(
+                    credentials_file_path.as_posix().split('/')[:-1]
+                ),
+                exist_ok=True
+            )
 
-        # Create target directory in case it does not exists.
-        os.makedirs(
-            '/'.join(
-                credentials_file_path.as_posix().split('/')[:-1]
-            ),
-            exist_ok=True
-        )
+            with open(credentials_file_path, "w") as file:
+                file.write(json.dumps({"jwt_token": self._jwt_token}))
 
-        with open(credentials_file_path, "w") as file:
-            file.write(json.dumps({"jwt_token": self._jwt_token}))
+            print(f'\n\t✅ CLI Token successfuly generated and stored to {credentials_file_path.as_posix()}')
 
-        print(f'✅ CLI Token successfuly generated and stored to {credentials_file_path.as_posix()}')
+            return self._jwt_token
+        except TimeoutException as e:
+            print(f'\n\n\t❌ The process was not able to complete in time. Please try again.\n\n')
+            return None
 
-        return self._jwt_token
+
 
     def check_credentials(self):
         # This method is responsible for inspecting the naas credentials files
@@ -397,8 +416,8 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
             # We could not find any credentials, so we need to start the authentication process
             self._generate_credential_file(credentials_file_path=credentials_path)
 
-        if not self._jwt_token:
-            raise Exception("Could not find any credentials to authenticate with.")
+        # if not self._jwt_token:
+        #     raise Exception("Could not find any credentials to authenticate with.")
 
     def trade_for_long_lived_token(self, access_token):
         # headers = {"Authorization": f"Bearer {access_token}"}
