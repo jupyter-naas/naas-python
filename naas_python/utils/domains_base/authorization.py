@@ -37,19 +37,33 @@ class CustomHandler(BaseHTTPRequestHandler):
     Custom request handler for handling HTTP POST and OPTIONS requests.
     """
 
+    # Prevent log messages to be printed to the terminal
+    def log_message(self, format, *args):
+        pass
+
     def do_POST(self):
         """
         Handle HTTP POST request.
         """
+
         logging.debug("POST request received.")
+
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "content-type",
+            "Content-Type": "application/json",
+            "Vary": "origin"
+        }
 
         # Send a successful response header
         self.send_response(200)
-        self.send_header("Content-Type", "text/html")
+        for header, value in headers.items():
+            self.send_header(header, value)
         self.end_headers()
 
         # Inform the client that authentication is complete
-        self.wfile.write(b"Authentication process has been successfully completed.")
+        self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
 
         post_data = self._read_post_data()
 
@@ -71,8 +85,10 @@ class CustomHandler(BaseHTTPRequestHandler):
         Handle HTTP OPTIONS request.
         """
         headers = {
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": "*", #self.headers.get('Origin'),
             "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "content-type",
+            "Vary": "origin"
         }
 
         # Send a successful response header and include CORS headers
@@ -106,6 +122,14 @@ class AuthenticatorBaseServer(ThreadingHTTPServer):
         while not self.data:
             try:
                 self.handle_request()
+
+                # Sometime, there can be some concurrency issues making the CLI wait for the full timeout while the POST request as
+                # already been handled. So it's waiting for a request that will never happen.
+                # To mitigate this situation, after the first request being handled, which should be a sign that the webapp is actually trying
+                # to send the payload. We are reducing the timeout to 2 seconds as what we should get, in a row is an OPTIONS request followed directly
+                # by the POST request. So 2 seconds should be enough to handle that.
+                self.timeout = 2
+
             except IOError:
                 self._handle_exception(400, "invalid_request", "IOError")
                 break
@@ -149,10 +173,10 @@ class IAuthenticatorAdapter:
 class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
     def __init__(
         self,
-        port=8080,
+        port=38745,
         trade_url="https://auth.naas.ai/bearer/workspace/longlived",
-        timeout=5,  # 60,
-        login_url="https://naas.ai?cli_token=generate_token",
+        timeout=60,  # 60,
+        login_url=os.environ.get('LOGIN_URL', "https://naas.ai?cli_token=generate_token"),
     ):
         self._access_token = None
         self._jwt_token = None
@@ -258,9 +282,11 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
 
             _environment_mode = os.getenv("NAAS_ENVIRONMENT_MODE", "production")
             if _environment_mode == "production":
+                print(f'🌐 Opening {self._login_url} to automatically generate your CLI token.')
                 if not webbrowser.open(self._login_url):
                     logging.debug("Failed to open the browser.")
-                    return None
+                    print(f'⚠️ Not able to open your browser automatically. Please go to {self._login_url} ⚠️')
+                    #return None
                 response = server._gather_result()
 
             else:
@@ -284,6 +310,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
                 return None
 
         access_token = self._parse_login_response(response)
+
         # Proceed with registering the token into the credentials file (following the model described above)
         return access_token
 
@@ -320,8 +347,18 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
 
         self._jwt_token = self.trade_for_long_lived_token(self.access_token())
 
+        # Create target directory in case it does not exists.
+        os.makedirs(
+            '/'.join(
+                credentials_file_path.as_posix().split('/')[:-1]
+            ),
+            exist_ok=True
+        )
+
         with open(credentials_file_path, "w") as file:
             file.write(json.dumps({"jwt_token": self._jwt_token}))
+
+        print(f'✅ CLI Token successfuly generated and stored to {credentials_file_path.as_posix()}')
 
         return self._jwt_token
 
