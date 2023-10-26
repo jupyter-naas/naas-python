@@ -372,7 +372,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
             with open(credentials_file_path, "w") as file:
                 file.write(json.dumps({"jwt_token": self._jwt_token}))
 
-            print(f'\n\t✅ CLI Token successfuly generated and stored to {credentials_file_path.as_posix()}')
+            print(f'\n\t✅ CLI Token successfuly generated and stored to {credentials_file_path.as_posix()}\n\n')
 
             return self._jwt_token
         except TimeoutException as e:
