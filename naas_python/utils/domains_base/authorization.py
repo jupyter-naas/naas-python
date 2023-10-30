@@ -188,7 +188,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         port=38745,
         trade_url="https://auth.naas.ai/bearer/workspace/longlived",
         timeout=60,  # 60,
-        login_url=os.environ.get('LOGIN_URL', "https://naas.ai?cli_token=generate_token"),
+        login_url=os.environ.get('NAAS_LOGIN_URL', "https://naas.ai?cli_token=generate_token"),
     ):
         self._access_token = None
         self._jwt_token = None
