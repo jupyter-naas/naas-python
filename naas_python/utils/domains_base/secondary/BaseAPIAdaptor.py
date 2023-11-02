@@ -1,16 +1,14 @@
-from datetime import datetime
 import os
-from logging import getLogger
 from typing import Any, Union
+import logging
 
 import requests
-from urllib3.exceptions import NewConnectionError, MaxRetryError
-from requests.exceptions import ConnectionError
 from cachetools.func import ttl_cache
+from requests.exceptions import ConnectionError
+from urllib3.exceptions import MaxRetryError, NewConnectionError
 
+from naas_python.utils.domains_base.authorization import NaasSpaceAuthenticatorAdapter
 from naas_python.utils.exceptions import NaasException
-
-logger = getLogger(__name__)
 
 
 class ServiceAuthenticationError(NaasException):
@@ -21,16 +19,15 @@ class ServiceStatusError(NaasException):
     pass
 
 
-class BaseAPIAdaptor:
+class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
     host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "https://api.naas.ai")
     # Cache name is the name of the calling module
     cache_name = __name__
     cache_expire_after = 60  # Cache expires after 60 seconds
 
     def __init__(self) -> None:
+        # Base authenticator class
         super().__init__()
-        self.logger = getLogger(__name__)
-        self.logger.debug(f"API Base URL: {self.host}")
 
     @ttl_cache(maxsize=1, ttl=cache_expire_after)
     def _check_service_status(self):
@@ -38,11 +35,11 @@ class BaseAPIAdaptor:
         Check the status of the service API before executing other methods.
         """
         try:
-            self.logger.debug("Service status cache is still valid")
+            logging.debug(f"API Base URL: {self.host}")
 
             api_response = requests.get(f"{self.host}")
 
-            self.logger.debug(
+            logging.debug(
                 f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
             )
 
@@ -80,6 +77,8 @@ class BaseAPIAdaptor:
         # Will be updated using the new authorization validators
         if token:
             headers.update({"Authorization": f"Bearer {token}"})
+        else:
+            headers.update({"Authorization": f"Bearer {self.jwt_token()}"})
 
         # Status checks will be handled separately
         try:

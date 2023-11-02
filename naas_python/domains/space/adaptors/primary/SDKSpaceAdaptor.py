@@ -101,9 +101,7 @@ class SDKSpaceAdaptor(ISpaceInvoker):
         # Step 1: Create a new Registry on space.naas.ai if requested
 
         if not skip_registry:
-            self.console.print(
-                f"[cyan]Creating Docker Registry '{registry_name}'...[/cyan]"
-            )
+            print(f"Creating Docker Registry '{registry_name}'...")
             from naas_python.domains.registry.handlers.PythonHandler import (
                 primaryAdaptor as RegistryHandler,
             )
@@ -112,33 +110,29 @@ class SDKSpaceAdaptor(ISpaceInvoker):
             try:
                 registry = RegistryHandler.create(name=registry_name)
             except RegistryConflictError:
-                self.console.print(
-                    f"[yellow]A registry with the name '{registry_name}' already exists. Proceeding with existing registry.[/yellow]"
+                print(
+                    f"A registry with the name '{registry_name}' already exists. Proceeding with existing registry."
                 )
                 registry = RegistryHandler.get(name=registry_name)
 
             # Get credentials for the registry (will create a credentials file if it doesn't exist)
             # and set up docker login for the registry (if type is docker)
             if space_type == "docker":
-                self.console.print(
-                    f"[cyan]Retrieving credentials for Docker Registry...[/cyan]"
-                )
+                print(f"Retrieving credentials for Docker Registry...")
                 RegistryHandler.get_credentials(name=registry_name)
 
         # Step 2.a: Build and push image to registry container if requested:
         if space_type == "docker":
-            self.console.print(
-                f"[cyan]Building Docker Image for '{space_name}'...[/cyan]"
-            )
+            print(f"Building Docker Image for '{space_name}'...")
             os.system(
-                f"docker build -t {registry.uri}:latest -f {dockerfile_path} {docker_context}"
+                f"docker build -t {registry.registry.uri}:latest -f {dockerfile_path} {docker_context}"
             )
 
-            self.console.print("[cyan]Pushing Docker Image...")
-            os.system(f"docker push {registry.uri}:latest")
+            print("Pushing Docker Image...")
+            os.system(f"docker push {registry.registry.uri}:latest")
 
         # Step 2.b: Create a new space on space.naas.ai
-        self.console.print(f"[cyan]Creating Naas Space '{space_name}'...[/cyan]")
+        print(f"Creating Naas Space '{space_name}'...")
         try:
             self.domain.create(
                 name=space_name,
@@ -146,7 +140,7 @@ class SDKSpaceAdaptor(ISpaceInvoker):
                 containers=[
                     {
                         "name": space_name,
-                        "image": image if image else f"{registry.uri}:latest",
+                        "image": image if image else f"{registry.registry.uri}:latest",
                         "env": {},
                         "cpu": cpu,
                         "memory": memory,
@@ -155,8 +149,8 @@ class SDKSpaceAdaptor(ISpaceInvoker):
                 ],
             )
         except SpaceConflictError as e:
-            self.console.print(
-                f"[yellow]A space with the name '{space_name}' already exists. Proceeding with existing space.[/yellow]"
+            print(
+                f"A space with the name '{space_name}' already exists. Proceeding with existing space."
             )
             self.domain.get(name=space_name)
 
@@ -207,7 +201,7 @@ class SDKSpaceAdaptor(ISpaceInvoker):
                 )
 
                 try:
-                    _build_command = f"  docker build -t {registry.uri}:latest -f {dockerfile_path} {docker_context}"
+                    _build_command = f"  docker build -t {registry.registry.uri}:latest -f {dockerfile_path} {docker_context}"
                 except ValueError as e:
                     raise ValueError(
                         "When space_type is 'docker', dockerfile_path and docker_context must be provided. Please provide these values and try again"
@@ -218,11 +212,11 @@ class SDKSpaceAdaptor(ISpaceInvoker):
                     f'if: ${{ github.event_name == "push" }}',
                     "run: |",
                     _build_command,
-                    f"  docker push { registry.uri }:latest",
+                    f"  docker push { registry.registry.uri }:latest",
                 ]
                 pipeline.add_job("Build and Push Docker Image", docker_steps)
 
             # Render the CI/CD configuration
             pipeline.render()
 
-            self.console.print("[green]Generated CI/CD configuration.[/green]")
+            print("Generated CI/CD configuration.")

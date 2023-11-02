@@ -1,6 +1,5 @@
 from jinja2 import Environment, FileSystemLoader
 import os
-from naas_python import __ROOT_DIR__
 
 
 class Job:
@@ -62,5 +61,6 @@ class Pipeline:
         # Adjust the filename
         filename = f"{self.name.replace(' ', '-')}.yaml"
 
-        with open(f"{__ROOT_DIR__}/.github/workflows/{filename}", "w") as f:
+        # TODO: this need a fix to make sure the .github/workflows folder exists, in the expected location
+        with open(f".github/workflows/{filename}", "w") as f:
             f.write(_rendered_yaml)

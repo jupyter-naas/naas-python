@@ -1,33 +1,29 @@
 import json
 import os
-from logging import getLogger
 from os import getenv
+import logging
 
 import requests
 from requests.exceptions import ConnectionError
 
 from naas_python.domains.space.SpaceSchema import (
     ISpaceAdaptor,
-    SpaceValidationError,
     SpaceConflictError,
     SpaceNotFound,
+    SpaceValidationError,
 )
-
-logger = getLogger(__name__)
 from naas_python.utils.domains_base.secondary.BaseAPIAdaptor import BaseAPIAdaptor
 
 
 class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
     def __init__(self):
         super().__init__()
-        # TODO: proper authorization validation utility function
-        self._authorization_token = getenv("NAAS_PYTHON_API_TOKEN")
 
     @BaseAPIAdaptor.service_status_decorator
     def create_space(self, name, domain, containers) -> dict:
         _url = f"{self.host}/space/"
 
-        self.logger.debug(f"create request url: {_url}")
+        logging.debug(f"create request url: {_url}")
 
         api_response = self.make_api_request(
             requests.post,
@@ -35,10 +31,9 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
             payload=json.dumps(
                 {"name": name, "domain": domain, "containers": containers}
             ),
-            token=self._authorization_token,
         )
 
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
         return self._handle_create_response(api_response)
@@ -46,15 +41,11 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
     @BaseAPIAdaptor.service_status_decorator
     def get_space_by_name(self, name):
         _url = f"{self.host}/space/{name}"
-        self.logger.debug(f"get request url: {_url}")
+        logging.debug(f"get request url: {_url}")
 
-        api_response = self.make_api_request(
-            requests.get,
-            f"{self.host}/space/{name}",
-            token=self._authorization_token,
-        )
+        api_response = self.make_api_request(requests.get, f"{self.host}/space/{name}")
 
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
 
@@ -64,14 +55,13 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
     def list_spaces(self, page_size, page_number) -> dict:
         _url = f"{self.host}/space/?page_size={page_size}&page_number={page_number}"
 
-        self.logger.debug(f"list request url: {_url}")
+        logging.debug(f"list request url: {_url}")
 
         api_response = self.make_api_request(
             requests.get,
             _url,
-            token=self._authorization_token,
         )
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
         return self._handle_list_response(api_response)
@@ -87,16 +77,15 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
 
         _url = f"{self.host}/space/{name}"
 
-        self.logger.debug(f"update request url: {_url}")
+        logging.debug(f"update request url: {_url}")
 
         api_response = self.make_api_request(
             requests.put,
             _url,
             payload=json.dumps(payload),
-            token=self._authorization_token,
         )
 
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
         return self._handle_get_response(api_response)
@@ -104,15 +93,14 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
     @BaseAPIAdaptor.service_status_decorator
     def delete_space(self, name) -> dict:
         _url = f"{self.host}/space/{name}"
-        self.logger.debug(f"delete request url: {_url}")
+        logging.debug(f"delete request url: {_url}")
 
         api_response = self.make_api_request(
             requests.delete,
             _url,
-            token=self._authorization_token,
         )
 
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
         return self._handle_delete_response(api_response)

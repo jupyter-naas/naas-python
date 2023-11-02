@@ -1,5 +1,5 @@
 import json
-from os import getenv
+import logging
 
 import requests
 
@@ -15,23 +15,22 @@ from naas_python.utils.domains_base.secondary.BaseAPIAdaptor import BaseAPIAdapt
 class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     def __init__(self):
         super().__init__()
-        # TODO: proper authorization validation utility function
-        self._authorization_token = getenv("NAAS_PYTHON_API_TOKEN")
+        # self.authenticator = NaasSpaceAuthenticatorAdapter()
+        # self._authorization_token = self.authenticator.jwt_token
 
     @BaseAPIAdaptor.service_status_decorator
     def create_registry(self, name) -> dict:
         _url = f"{self.host}/registry/"
 
-        self.logger.debug(f"create request url: {_url}")
+        logging.debug(f"create request url: {_url}")
 
         api_response = self.make_api_request(
             requests.post,
             _url,
             payload=json.dumps({"name": name}),
-            token=self._authorization_token,
         )
 
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
         return self._handle_create_response(api_response)
@@ -39,15 +38,14 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     @BaseAPIAdaptor.service_status_decorator
     def get_registry_by_name(self, name) -> dict:
         _url = f"{self.host}/registry/{name}"
-        self.logger.debug(f"get request url: {_url}")
+        logging.debug(f"get request url: {_url}")
 
         api_response = self.make_api_request(
             requests.get,
             f"{self.host}/registry/{name}",
-            token=self._authorization_token,
         )
 
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
 
@@ -57,14 +55,13 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     def list_registries(self, page_size, page_number) -> dict:
         _url = f"{self.host}/registry/?page_size={page_size}&page_number={page_number}"
 
-        self.logger.debug(f"list request url: {_url}")
+        logging.debug(f"list request url: {_url}")
 
         api_response = self.make_api_request(
             requests.get,
             _url,
-            token=self._authorization_token,
         )
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
         return self._handle_list_response(api_response)
@@ -72,15 +69,14 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     @BaseAPIAdaptor.service_status_decorator
     def delete_registry(self, name) -> dict:
         _url = f"{self.host}/registry/{name}"
-        self.logger.debug(f"delete request url: {_url}")
+        logging.debug(f"delete request url: {_url}")
 
         api_response = self.make_api_request(
             requests.delete,
             _url,
-            token=self._authorization_token,
         )
 
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
 
@@ -90,15 +86,14 @@ class NaasRegistryAPIAdaptor(BaseAPIAdaptor, IRegistryAdaptor):
     def get_registry_credentials(self, name) -> dict:
         _url = f"{self.host}/registry/{name}/credentials"
 
-        self.logger.debug(f"get credentials request url: {_url}")
+        logging.debug(f"get credentials request url: {_url}")
 
         api_response = self.make_api_request(
             requests.get,
             _url,
-            token=self._authorization_token,
         )
 
-        self.logger.debug(
+        logging.debug(
             f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
         )
 
