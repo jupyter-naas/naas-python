@@ -1,0 +1,1 @@
+from naas_models.pydantic.secret_p2p import *

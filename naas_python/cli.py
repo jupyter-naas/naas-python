@@ -9,6 +9,11 @@ from naas_python.domains.space.handlers.CLISpaceHandler import (
     primaryAdaptor as typerSpaceAdaptor,
 )
 
+# from naas_python.domains import secretCliAdaptor  # , secretCliAdaptor
+from naas_python.domains.secret.handlers.CLISecretHandler import (
+    primaryAdaptor as typerSecretAdaptor,
+)
+
 
 def _create_cli_app():
     app = typer.Typer(
@@ -21,6 +26,7 @@ def _create_cli_app():
     # Registry domain's related commands
     app.add_typer(typerSpaceAdaptor.app, name="space")
     app.add_typer(typerRegistryAdaptor.app, name="registry")
+    app.add_typer(typerSecretAdaptor.app, name="secret")
 
     return app
 

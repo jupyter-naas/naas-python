@@ -1,6 +1,7 @@
 import os
 from typing import Any, Union
 import logging
+import json
 
 import requests
 from cachetools.func import ttl_cache
@@ -21,6 +22,7 @@ class ServiceStatusError(NaasException):
 
 class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
     host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "https://api.naas.ai")
+    # host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "http://localhost:8000")
     # Cache name is the name of the calling module
     cache_name = __name__
     cache_expire_after = 60  # Cache expires after 60 seconds
@@ -65,7 +67,8 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
     def make_api_request(
         self,
         method: Union[
-            requests.get, requests.post, requests.patch, requests.put, requests.delete
+            requests.get, requests.post, requests.patch, requests.put, 
+            # requests.delete
         ],
         url: str,
         token: str = None,
@@ -80,7 +83,6 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
         else:
             headers.update({"Authorization": f"Bearer {self.jwt_token()}"})
 
-        # Status checks will be handled separately
         try:
             api_response = method(url, data=payload, headers=headers)
             api_response.raise_for_status()
