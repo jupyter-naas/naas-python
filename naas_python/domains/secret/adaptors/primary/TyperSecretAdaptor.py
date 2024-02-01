@@ -97,12 +97,6 @@ class TyperSecretAdaptor(ISecretInvoker):
         if secret is None:
             print('Secret Successfully created')
 
-        # if rich_preview:
-        #     self.console.print(PydanticTableModel([secret]).table)
-
-        # else:
-        #     print(f"Name:{name} Value :{value} {secret}")
-
     def get(
         self,
         name: str = typer.Option(..., "--name", "-n", help="Name of the secret"),
@@ -143,7 +137,6 @@ class TyperSecretAdaptor(ISecretInvoker):
     ):
         """List all secrets for the current user"""
         secret_list = self.domain.list(page_size=page_size, page_number=page_number)
-        # print("secret_list:",secret_list)
 
         data = []
         headers = []
