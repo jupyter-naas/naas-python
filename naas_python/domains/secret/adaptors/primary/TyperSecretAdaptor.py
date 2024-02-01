@@ -94,11 +94,14 @@ class TyperSecretAdaptor(ISecretInvoker):
             value=value
         )
 
-        if rich_preview:
-            self.console.print(PydanticTableModel([secret]).table)
+        if secret is None:
+            print('Secret Successfully created')
 
-        else:
-            print(f"Name:{name} Value :{value} {secret}")
+        # if rich_preview:
+        #     self.console.print(PydanticTableModel([secret]).table)
+
+        # else:
+        #     print(f"Name:{name} Value :{value} {secret}")
 
     def get(
         self,
@@ -117,7 +120,7 @@ class TyperSecretAdaptor(ISecretInvoker):
             self.console.print(PydanticTableModel([secret]).table)
 
         else:
-            print(f"{secret}")
+            print(secret.value)
 
     def delete(
         self,
@@ -125,7 +128,7 @@ class TyperSecretAdaptor(ISecretInvoker):
     ):
         self.domain.delete(name=name)
 
-        print(f"Secret {name} deleted successfully")
+        print(f"Secret '{name}' deleted successfully")
 
     def list(
         self,

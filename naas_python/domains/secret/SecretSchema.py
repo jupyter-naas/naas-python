@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
 from typing import Any
+from typing import List
 
 from naas_models.pydantic.secret_p2p import *
 
@@ -14,19 +15,19 @@ logger = getLogger(__name__)
 class ISecretAdaptor(metaclass=ABCMeta):
 
     @abstractmethod
-    def create_secret(self, **kwargs) -> dict:
+    def create_secret(self, name: str, value: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, **kwargs) -> dict:
+    def get_secret(self, name: str) -> Secret:
         raise NotImplementedError
 
     @abstractmethod
-    def list_secrets(self, **kwargs) -> dict:
+    def list_secrets(self, page_size: int, page_number: int) -> List[Secret]:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_secret(self, **kwargs) -> dict:
+    def delete_secret(self, name: str) -> None:
         raise NotImplementedError
 
 
@@ -37,19 +38,19 @@ class ISecretDomain(metaclass=ABCMeta):
     adaptor: ISecretAdaptor
 
     @abstractmethod
-    def create(self, **kwargs) -> SecretCreateRequest:
+    def create(self, name: str, value: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, **kwargs) -> SecretGetResponse:
+    def get(self, name: str) -> Secret:
         raise NotImplementedError
 
     @abstractmethod
-    def list(self, **kwargs) -> SecretListResponse:
+    def list(self, page_size: int, page_number: int) -> List[Secret]:
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, **kwargs) -> str:
+    def delete(self, name: str) -> None:
         raise NotImplementedError
 
 

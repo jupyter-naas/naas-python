@@ -16,6 +16,7 @@ cachetools = "^5.3.1"
 naas-models = { git = "https://github.com/jupyter-naas/naas-models.git", tag = "v1.4.1", subdirectory = "python" }
 jinja2 = "^3.0.1"
 grpcio = "^1.60.0"
+pydash = "^7.0.7"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
