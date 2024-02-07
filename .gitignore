@@ -162,3 +162,5 @@ cython_debug/
 # Log files
 *.log
 .logs
+
+node_modules
