@@ -439,23 +439,18 @@ files = [
 
 [[package]]
 name = "naas-models"
-version = "0.1.0"
+version = "1.4.4"
 description = "Library containing all models used in the naas ecosystem. You can use this library to know how to talk to our micro services."
 optional = false
-python-versions = "^3.9"
-files = []
-develop = false
+python-versions = ">=3.9,<4.0"
+files = [
+    {file = "naas_models-1.4.4-py3-none-any.whl", hash = "sha256:61182caeda9e999e0d04bfe5e032a4ad8447e1f54b3289d1f09e7fa9c954ddb8"},
+    {file = "naas_models-1.4.4.tar.gz", hash = "sha256:5678eafebde65f375b7d5b5c1819f5b45f8705c97402c3ac6196b4faa5b45a83"},
+]
 
 [package.dependencies]
-protobuf = "^4"
-protobuf-to-pydantic = "^0.1.7.3"
-
-[package.source]
-type = "git"
-url = "https://github.com/jupyter-naas/naas-models.git"
-reference = "v1.4.1"
-resolved_reference = "3126d69ce6f5f0278f4ee634aedccc9c8c652428"
-subdirectory = "python"
+protobuf = ">=4.25.2,<5.0.0"
+protobuf-to-pydantic = ">=0.1.7.3,<0.2.0.0"
 
 [[package]]
 name = "packaging"
@@ -744,4 +739,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "bef658391f6159e977ac0080676d07aabab6b4a76daa0f19cdf72e99fed4aefc"
+content-hash = "9a5196de70ff4ee57b7a8a5192b3ffb4d97a8e13860ca9360fc0b349af4d9885"
