@@ -359,13 +359,19 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         self._file_contents = json.loads(self._file_contents)
         return self._file_contents
 
-    #todo if jupyterhubtoken
-    def _generate_credential_file(self, credentials_file_path: Path):
+    def _generate_credential_file(self, credentials_file_path: Path, jupyterhub_token=False, access_token=None, prompt=True):
         # Trade access token (and authenticate) and store the long-lived token in the credentials file
+        
+        if jupyterhub_token:
+            access_token = self.trade_for_long_lived_token(access_token=access_token, access_token_type="jupyterhub")
+            self._jwt_token = access_token
+        else:
+            access_token = self.trade_for_long_lived_token(self.access_token())
+            self._jwt_token = access_token
+            
         try:
-            self._jwt_token = self.trade_for_long_lived_token(self.access_token())
-
             # Create target directory in case it does not exists.
+            #todo simplify
             os.makedirs(
                 '/'.join(
                     credentials_file_path.as_posix().split('/')[:-1]
@@ -374,11 +380,12 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
             )
 
             with open(credentials_file_path, "w") as file:
-                file.write(json.dumps({"jwt_token": self._jwt_token}))
+                file.write(json.dumps({"jwt_token": access_token}))
 
-            print(f'\n\t✅ CLI Token successfuly generated and stored to {credentials_file_path.as_posix()}\n\n')
+            if prompt:
+                print(f'\n\t✅ CLI Token successfuly generated and stored to {credentials_file_path.as_posix()}\n\n')
 
-            return self._jwt_token
+            return access_token
         except TimeoutException as e:
             print(f'\n\n\t❌ The process was not able to complete in time. Please try again.\n\n')
             return None
@@ -386,11 +393,6 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
     def check_credentials(self):
         # This method is responsible for inspecting the naas credentials files
         # locally and retrieving the jwt token if it exists and is valid.
-        # The order of priority is as follows:
-        # 1. Check if file exists, if not call appropriate method to start authentication process
-        # 2.a Check if file is empty, if so call appropriate method to start authentication process
-        # 2.b If file is not empty, check if token is valid, if not call appropriate method to start authentication process
-        # 3. If file exists and is not empty and token is valid, set the jwt token to the class property and return
 
         credentials_path = Path(os.path.expanduser("~/.naas/credentials"))
         _var_credentials = self._gather_env_credentials()
@@ -403,22 +405,24 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         
         elif "jupyterhub_api_token" in _var_credentials:
             access_token = _var_credentials["jupyterhub_api_token"]
-            self._generate_jupyter_long_lived_token(credentials_file_path=credentials_path, access_token=access_token)
-                    
+            self._generate_credential_file(credentials_file_path=credentials_path, jupyterhub_token=True, access_token=access_token, prompt=False)
+            
         elif credentials_path.exists() and credentials_path.is_file():
             # Check the file contents and grab the token
             credentials = self._gather_file_credentials(credentials_path)
             logging.debug(f"Credentials file found and not empty.")
-            credentials.update(self._gather_env_credentials())
-                        
+            # credentials.update(self._gather_env_credentials())
+            self._jwt_token = credentials["jwt_token"]
+            
         else :   
             # We could not find any credentials, so we need to start the authentication process
             self._generate_credential_file(credentials_file_path=credentials_path)
 
-    #todo para acces_token_type = trade_url
-    def trade_for_long_lived_token(self, access_token):
-        # headers = {"Authorization": f"Bearer {access_token}"}
-        url = f"{self.trade_url}/?token={access_token}"
+    def trade_for_long_lived_token(self, access_token, access_token_type="workspace"):
+        if access_token_type == "workspace":
+            url = f"{self.trade_url}/?token={access_token}"
+        if access_token_type == "jupyterhub":
+            url = f"{self.trade_jupyterhub_url}/?token={access_token}"
 
         response = requests.get(url)
 
