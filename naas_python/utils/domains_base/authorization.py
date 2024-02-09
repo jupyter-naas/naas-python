@@ -372,12 +372,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         try:
             # Create target directory in case it does not exists.
             #todo simplify
-            os.makedirs(
-                '/'.join(
-                    credentials_file_path.as_posix().split('/')[:-1]
-                ),
-                exist_ok=True
-            )
+            os.makedirs(os.path.join(os.path.dirname(credentials_file_path)))
 
             with open(credentials_file_path, "w") as file:
                 file.write(json.dumps({"jwt_token": access_token}))
