@@ -436,42 +436,6 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
                 f"Token trade failed. Reason: {json.loads(response.text).get('detail')}"
             )
 
-    def _generate_jupyter_long_lived_token(self, credentials_file_path:Path, access_token:str):
-        # Trade access token (and authenticate) and store the long-lived token in the credentials file
-        try:
-            url = f"{self.trade_jupyterhub_url}/?token={access_token}"
-
-            response = requests.get(url)
-
-            if response.status_code == 200:
-                result = response.text
-                logging.debug("Token successfully traded for long-lived token.")
-                self._jwt_token = json.loads(result).get("access_token")
-            else:
-                print(response)
-                raise Exception(
-                    f"Token trade failed. Reason: {json.loads(response.text).get('detail')}"
-                )
-                            
-            # Create target directory in case it does not exists.
-            #todo change to os.path.join
-            os.makedirs(
-                '/'.join(
-                    credentials_file_path.as_posix().split('/')[:-1]
-                ),
-                exist_ok=True
-            )
-
-            with open(credentials_file_path, "w") as file:
-                file.write(json.dumps({"jwt_token": self._jwt_token}))
-
-            print(f'\n\t✅ CLI Token successfuly generated and stored to {credentials_file_path.as_posix()}\n\n')
-
-            return self._jwt_token
-        except TimeoutException as e:
-            print(f'\n\n\t❌ The process was not able to complete in time. Please try again.\n\n')
-            return None   
-
     def jwt_token(self):
         if not self._jwt_token:
             self.check_credentials()
