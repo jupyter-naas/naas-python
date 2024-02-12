@@ -359,11 +359,10 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         self._file_contents = json.loads(self._file_contents)
         return self._file_contents
 
-    def _generate_credential_file(self, credentials_file_path: Path, jupyterhub_token=False, access_token=None, prompt=True):
+    def _generate_credential_file(self, credentials_file_path: Path, jupyterhub_access_token=None, prompt=True):
         # Trade access token (and authenticate) and store the long-lived token in the credentials file
-        
-        if jupyterhub_token:
-            access_token = self.trade_for_long_lived_token(access_token=access_token, access_token_type="jupyterhub")
+        if jupyterhub_access_token is not None:
+            access_token = self.trade_for_long_lived_token(access_token=jupyterhub_access_token, access_token_type="jupyterhub")
             self._jwt_token = access_token
         else:
             access_token = self.trade_for_long_lived_token(self.access_token())
@@ -371,8 +370,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
             
         try:
             # Create target directory in case it does not exists.
-            #todo simplify
-            os.makedirs(os.path.join(os.path.dirname(credentials_file_path)))
+            os.makedirs(os.path.join(os.path.dirname(credentials_file_path)), exist_ok=True)
 
             with open(credentials_file_path, "w") as file:
                 file.write(json.dumps({"jwt_token": access_token}))
@@ -400,7 +398,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         
         elif "jupyterhub_api_token" in _var_credentials:
             access_token = _var_credentials["jupyterhub_api_token"]
-            self._generate_credential_file(credentials_file_path=credentials_path, jupyterhub_token=True, access_token=access_token, prompt=False)
+            self._generate_credential_file(credentials_file_path=credentials_path, jupyterhub_access_token=access_token, prompt=False)
             
         elif credentials_path.exists() and credentials_path.is_file():
             # Check the file contents and grab the token
