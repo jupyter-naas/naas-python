@@ -208,7 +208,7 @@ class NaasSpaceAuthenticatorAdapter(IAuthenticatorAdapter):
         for port in range(start_port, start_port + 1000):
             try:
                 self._server = AuthenticatorBaseServer(
-                    "localhost", self.port, timeout=self._timeout
+                    "0.0.0.0", self.port, timeout=self._timeout
                 )
                 logging.debug(f"HTTP server started on port {self.port}.")
                 self._redirect_uri = f"http://localhost:{port}"
