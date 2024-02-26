@@ -4,6 +4,7 @@ from typing import Any
 from typing import List
 
 from naas_models.pydantic.secret_p2p import *
+from .models.Secret import Secret
 
 from naas_python.utils.exceptions import NaasException
 
@@ -40,6 +41,10 @@ class ISecretDomain(metaclass=ABCMeta):
     @abstractmethod
     def create(self, name: str, value: str) -> None:
         raise NotImplementedError
+    
+    @abstractmethod
+    def bulk_create(self, secrets_list: List[Secret]) -> None:
+        raise NotImplementedError
 
     @abstractmethod
     def get(self, name: str) -> Secret:
@@ -60,6 +65,10 @@ class ISecretDomain(metaclass=ABCMeta):
 class ISecretInvoker(metaclass=ABCMeta):
     @abstractmethod
     def create(self, **kwargs):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def bulk_create(self, secrets_list: List[Secret]) -> None:
         raise NotImplementedError
 
     @abstractmethod

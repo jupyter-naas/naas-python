@@ -80,6 +80,25 @@ class NaasSecretAPIAdaptor(BaseAPIAdaptor, ISecretAdaptor):
         return None
 
     @BaseAPIAdaptor.service_status_decorator
+    def bulk_create(self, secrets_list: List[Secret]) -> None:
+        _url = f"{self.host}/secret/bulk"
+        
+        logging.debug(f"create request url: {_url}")
+
+        api_response = self.make_api_request(
+            requests.post,
+            _url,
+            payload=json.dumps(
+                secrets_list
+            ),
+        )
+        logging.debug(
+            f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
+        )
+        self._handle_response(api_response)
+        return None
+
+    @BaseAPIAdaptor.service_status_decorator
     def get_secret(self, name:str) -> Secret:
         _url = f"{self.host}/secret/{name}"
         logging.debug(f"get request url: {_url}")

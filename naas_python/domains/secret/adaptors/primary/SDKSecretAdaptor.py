@@ -24,7 +24,12 @@ class SDKSecretAdaptor(ISecretInvoker):
         """Create a secret with the given name"""
         secret = self.domain.create(name=name, value=value)
         return secret
-
+    
+    def bulk_create(self, secrets_list: List[Secret] = "[]") -> None:
+        """Create a list of secrets"""
+        secret = self.domain.bulk_create(secrets_list=secrets_list)
+        return secret
+    
     def list(self, page_size: int = 0, page_number: int = 0) -> List[Secret]:
         """List all secrets for the current user"""
         secret_list = self.domain.list(page_size=page_size, page_number=page_number)
