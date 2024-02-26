@@ -23,8 +23,12 @@ class SecretDomain(ISecretDomain):
         response = self.adaptor.create_secret(
             name=name, value=value,
         )
-
         return response
+
+    def bulk_create(self, secrets_list: List[Secret]) -> None:
+        response = self.adaptor.bulk_create(
+            secrets_list=secrets_list
+        )
 
     def get(self, name: str) -> Secret:
         response = self.adaptor.get_secret(name=name)
