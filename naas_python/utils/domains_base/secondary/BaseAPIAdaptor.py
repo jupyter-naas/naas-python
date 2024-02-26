@@ -89,8 +89,8 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
             return api_response
 
         except requests.exceptions.HTTPError as e:
-            _response = api_response.json()
             if api_response.status_code == 401:
+                _response = api_response.json()
                 _message = ""
                 if "error_message" in _response:
                     _message = _response["error_message"]
@@ -103,13 +103,7 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
                     e,
                 )
             elif api_response.status_code == 500:
-                _message = ""
-                if "error_message" in _response:
-                    _message = _response["error_message"]
-                elif "detail" in _response:
-                    _message = _response["detail"]
-                else:
-                    _message = "Internal Server Error"
+                _message = "Internal Server Error"
                 raise ServiceStatusError(_message, e)
             else:
                 # Other status codes will be handled by the calling method
