@@ -22,7 +22,7 @@ class ServiceStatusError(NaasException):
 
 class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
     host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "https://api.naas.ai")
-    # host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "http://localhost:8000")
+    #host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "http://localhost:8000")
     # Cache name is the name of the calling module
     cache_name = __name__
     cache_expire_after = 60  # Cache expires after 60 seconds
@@ -89,8 +89,8 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
             return api_response
 
         except requests.exceptions.HTTPError as e:
+            _response = api_response.json()
             if api_response.status_code == 401:
-                _response = api_response.json()
                 _message = ""
                 if "error_message" in _response:
                     _message = _response["error_message"]
@@ -103,7 +103,13 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
                     e,
                 )
             elif api_response.status_code == 500:
-                _message = "Internal Server Error"
+                _message = ""
+                if "error_message" in _response:
+                    _message = _response["error_message"]
+                elif "detail" in _response:
+                    _message = _response["detail"]
+                else:
+                    _message = "Internal Server Error"
                 raise ServiceStatusError(_message, e)
             else:
                 # Other status codes will be handled by the calling method
