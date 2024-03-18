@@ -20,6 +20,7 @@ from naas_python.domains.secret.SecretSchema import (
     ISecretDomain,
     ISecretInvoker,
     SecretConflictError,
+    Secret
 )
 # from naas_python.domains.secret.SecretSchema import SecrettryConflictError
 from naas_python.utils.cicd import Pipeline
@@ -53,6 +54,7 @@ class TyperSecretAdaptor(ISecretInvoker):
         # Include all commands
         self.app.command()(self.list)
         self.app.command()(self.create)
+        self.app.command()(self.bulk_create)
         self.app.command()(self.get)
         self.app.command()(self.delete)
 
@@ -95,6 +97,20 @@ class TyperSecretAdaptor(ISecretInvoker):
         )
 
         if secret is None:
+            print('Secret Successfully created')
+            
+    def bulk_create(
+        self,
+        secrets: str = typer.Option(..., "--secrets", help="List of secrets"),
+
+    ):
+        print("\ntyper_list:",json.dumps(secrets))
+        """Create Secrets with the given specifications"""
+        secrets = self.domain.bulk_create(
+            secrets_list=secrets,
+        )
+
+        if secrets is None:
             print('Secret Successfully created')
 
     def get(
