@@ -131,18 +131,18 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
             json.dump(existing_data, f)
 
     def __handle_retry(self, 
-        exception, workspace_id, storage_name, operation, retry_attempt: int=0, endpoint_url: str=None, file_path: str=None, object_name: str=None, src_file:str=None, dst_file:str=None)-> None:
+        workspace_id, storage_name, operation, retry_attempt: int=0, object_name: str=None, src_file:str=None, dst_file:str=None)-> None:
         if retry_attempt < self.MAX_RETRY_ATTEMPTS:
             self.__generate_credentials_s3(workspace_id, storage_name) 
             retry_attempt += 1
             operation(
-                endpoint_url,workspace_id,storage_name,retry_attempt,
-                src_file,dst_file if operation == self.post_workspace_storage_object or self.post_workspace_storage_object
+                workspace_id,storage_name,retry_attempt,
+                src_file,dst_file if operation == self.post_workspace_storage_object or self.get_workspace_storage_object
                 else 
                 object_name,
             )
         else:
-            raise exception
+            raise ExpiredToken("The provided token has expired. Please retry in few moments.")
 
     # Exceptions
     def __handle_exceptions(self, exception, message, operation, **kwargs):
@@ -150,9 +150,8 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         # print("\nmessage:", message)
 
         if "The provided token has expired." in message or "ExpiredToken" in str(exception):
-                self.__handle_retry(exception=ExpiredToken("The provided token has expired."), 
-                    operation=operation, **kwargs)
-                raise ExpiredToken
+                self.__generate_credentials_s3(kwargs['workspace_id'], kwargs['storage_name'])
+                self.__handle_retry(operation=operation, **kwargs)
         if "BadRequest" in message:
             raise BadRequest(f"Bad request. {message}")
         if "403" in message:
@@ -255,10 +254,6 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
             requests.get,
             _url,
         )
-
-        logging.debug(
-            f"Request URL: {api_response.url} :: status_code: {api_response.status_code}"
-        )
         return self._handle_response(api_response)    
     
     @BaseAPIAdaptor.service_status_decorator
@@ -296,7 +291,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
             s3.upload_file(Filename=src_file, Bucket=self.endpoint_url, Key=key)
         except Exception as e:
             error_message = str(e)
-            self.__handle_exceptions(e, message=error_message, operation=self.post_workspace_storage_object, retry_attempt=retry_attempt, workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file)
+            self.__handle_exceptions(e, message=error_message, operation=self.post_workspace_storage_object, workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file, retry_attempt=retry_attempt)
 
     @BaseAPIAdaptor.service_status_decorator
     def get_workspace_storage_object(self,
