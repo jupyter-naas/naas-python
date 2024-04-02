@@ -30,7 +30,7 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         super().__init__()
         self.MAX_RETRY_ATTEMPTS = 1
 
-        self.naas_bucket = os.getenv("NAAS_ENDPOINT_URL") or "naas-storage-test" #TODO create naas-storage with versioning
+        self.naas_bucket = os.getenv("NAAS_ENDPOINT_URL") or "api-naas-storage" #TODO create naas-storage with versioning
         self.naas_credentials=os.path.expanduser("~/.naas/credentials")
         self.naas_workspace_id=None
         self.naas_workspace_id=None
