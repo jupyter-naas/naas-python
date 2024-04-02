@@ -51,6 +51,8 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         src_file: str,
         dst_file: str,
     ) -> None:
+        if dst_file.endswith('/'):
+            dst_file = dst_file + os.path.basename(src_file)
         key = f"{workspace_id}/{storage_name}/{dst_file}"
         key = self.__clean_path(key)
 
@@ -74,7 +76,8 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         src_file: str, 
         dst_file:str, 
     ) -> bytes :
-
+        if dst_file.endswith('/') or dst_file.endswith('.'):
+            dst_file = dst_file + os.path.basename(src_file)
         filename=dst_file
         self.__clean_path(filename)
         object_key = workspace_id + "/" + storage_name + "/" + src_file
