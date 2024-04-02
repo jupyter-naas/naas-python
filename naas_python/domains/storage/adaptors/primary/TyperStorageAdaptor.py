@@ -124,6 +124,26 @@ class TyperStorageAdaptor(IStorageInvoker):
 
             for object in list_storage["object"]:
                 print(object)
+
+    def delete_workspace_storage_object(self,                                             
+        workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
+        storage_name: str = typer.Option(..., "--storage", "-s", help="Name of the storage"),                                      
+        object_name: str = typer.Option(..., "--object", "-o", help="Name of Object or Folder to remove."),
+        rich_preview: bool = typer.Option(
+            False,
+            "--rich-preview",
+            "-rp",
+            help="Rich preview of the information as a table",
+        )
+    ):
+        """Delete a Workspace Storage Object"""
+        print("Deleting object...")
+        response = self.domain.delete_workspace_storage_object(
+            workspace_id=workspace_id,
+            storage_name=storage_name,
+            object_name=object_name,
+        )
+        print("Object deleted.")               
                 
     def create_workspace_storage_credentials(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
@@ -193,23 +213,3 @@ class TyperStorageAdaptor(IStorageInvoker):
                     dst_file=dst_file
                 )
                 print("Object downloaded.")
-            
-    def delete_workspace_storage_object(self,                                             
-        workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
-        storage_name: str = typer.Option(..., "--storage", "-s", help="Name of the storage"),                                      
-        object_name: str = typer.Option(..., "--object", "-o", help="Name of Object or Folder to remove."),
-        rich_preview: bool = typer.Option(
-            False,
-            "--rich-preview",
-            "-rp",
-            help="Rich preview of the information as a table",
-        )
-    ):
-        """Delete a Workspace Storage Object"""
-        print("Deleting object...")
-        response = self.domain.delete_workspace_storage_object(
-            workspace_id=workspace_id,
-            storage_name=storage_name,
-            object_name=object_name,
-        )
-        print("Object deleted.")

@@ -40,6 +40,14 @@ class IStorageAdaptor(metaclass=ABCMeta):
     ) -> None:
         raise NotImplementedError
     
+    @abstractmethod    
+    def delete_workspace_storage_object(self,
+        workspace_id: str,
+        storage_name: Storage.__fields__['name'],
+        object_name: Object.__fields__['name'],   
+    ) -> None:
+        raise NotImplementedError    
+    
 class IStorageProviderAdaptor(metaclass=ABCMeta):
 
     provider_id : str
@@ -61,15 +69,6 @@ class IStorageProviderAdaptor(metaclass=ABCMeta):
         src_file: str,
         dst_file: str,
     ) -> bytes:
-        raise NotImplementedError
-    
-    @abstractmethod    
-    def delete_workspace_storage_object(self,
-        workspace_id: str,
-        storage_name: Storage.__fields__['name'],
-        object_name: Object.__fields__['name'],
-        # storage_type: str,     
-    ) -> None:
         raise NotImplementedError
     
     @abstractmethod    
@@ -114,6 +113,15 @@ class IStorageDomain(metaclass=ABCMeta):
         storage_prefix: Object.__fields__['prefix'],        
     ) -> None:
         raise NotImplementedError
+
+    @abstractmethod    
+    def delete_workspace_storage_object(self,
+        workspace_id: str,
+        storage_name: Storage.__fields__['name'],
+        # storage_prefix: Object.__fields__['prefix'],
+        object_name: Object.__fields__['name'],
+    ) -> None:
+        raise NotImplementedError     
     
     @abstractmethod
     def post_workspace_storage_object(self,
@@ -132,14 +140,7 @@ class IStorageDomain(metaclass=ABCMeta):
         dst_file: str,        
     ) -> bytes:
         raise NotImplementedError
-
-    @abstractmethod    
-    def delete_workspace_storage_object(self,
-        workspace_id: str,
-        storage_name: Storage.__fields__['name'],
-        object_name: Object.__fields__['name'],
-    ) -> None:
-        raise NotImplementedError    
+   
     
     @abstractmethod    
     def create_workspace_storage_credentials(self,
@@ -167,16 +168,16 @@ class IStorageInvoker(metaclass=ABCMeta):
         raise NotImplementedError
     
     @abstractmethod
+    def delete_workspace_storage_object(self, **kwargs):
+        raise NotImplementedError     
+    
+    @abstractmethod
     def post_workspace_storage_object(self, **kwargs):
         raise NotImplementedError
     
     @abstractmethod
     def get_workspace_storage_object(self, **kwargs):
-        raise NotImplementedError     
-
-    @abstractmethod
-    def delete_workspace_storage_object(self, **kwargs):
-        raise NotImplementedError    
+        raise NotImplementedError        
     
     @abstractmethod
     def create_workspace_storage_credentials(self, **kwargs):

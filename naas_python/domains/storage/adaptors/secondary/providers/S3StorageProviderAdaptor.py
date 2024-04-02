@@ -92,25 +92,6 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         except Exception as e:
             self.__handle_exceptions(str(e))  
 
-    #TODO move to API ?    
-    def delete_workspace_storage_object(self,
-        workspace_id: str,
-        storage_name: Storage.__fields__['name'],
-        object_name: Object.__fields__['name'], 
-    ) -> None:
-        object_key = workspace_id + "/" + storage_name + "/" + object_name
-        object_key = self.__clean_path(object_key)
-
-        try:
-            if self.AWS_ACCESS_KEY_ID is None or self.__s3_token_is_expired(self.AWS_SESSION_EXPIRATION_TOKEN): token = self.__read_naas_credentials(workspace_id, storage_name)
-            # print("token:", token)
-            
-            s3 = boto3.client('s3')
-            response = s3.delete_object(Bucket=self.naas_bucket, Key=object_key)
-            return ("deleted object:", object_name)
-        
-        except Exception as e:
-            self.__handle_exceptions(str(e))  
         
     def create_workspace_storage_credentials(self,                                    
         workspace_id: str,

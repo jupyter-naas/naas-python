@@ -1,6 +1,8 @@
 import json
+import os
 from logging import getLogger
 import pydash as _
+
 
 logger = getLogger(__name__)
 
@@ -28,10 +30,9 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         elif api_response.status_code == 200:
             return api_response.json()
         
-        #TODO
-        elif api_response.json().get("error")["error"] == 1:
+        elif isinstance(api_response.json().get("error"), dict) and api_response.json().get("error")["error"] == 1:
             raise StorageNotFoundError(api_response.json().get("error")["message"])
-        elif api_response.json().get("error")["error"] == 2:
+        elif isinstance(api_response.json().get("error"), dict) and api_response.json().get("error")["error"] == 2:
             raise StorageNotFoundError(api_response.json().get("error")["message"])
         else:
             logger.error(api_response.json())
@@ -93,6 +94,23 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         )
         return self.__handle_response(api_response)
     
+    @BaseAPIAdaptor.service_status_decorator
+    def delete_workspace_storage_object(self, 
+        workspace_id: str, 
+        storage_name: str,
+        # storage_prefix: str,
+        object_name: str,
+    ) -> None:
+        object=os.path.basename(object_name)
+        prefix=os.path.dirname(object_name)
+        _url = f"{self.host}/workspace/{workspace_id}/storage/{storage_name}?prefix={prefix}&object={object}"
+
+        api_response = self.make_api_request(
+            requests.delete,
+            _url,
+        )
+        return self.__handle_response(api_response)
+
     def generate_credentials(self, workspace_id :str, storage_name: str) -> dict:
 
         _url = f"{self.host}/workspace/{workspace_id}/storage/credentials"

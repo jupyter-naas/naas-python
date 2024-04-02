@@ -53,6 +53,21 @@ class SDKStorageAdaptor(IStorageInvoker):
                 storage_prefix=storage_prefix,
             )
         return response
+    
+    def delete_workspace_storage_object(self, 
+        workspace_id: str = "", 
+        storage_name: str = "",
+        # storage_prefix: str = "",
+        object_name: str = "",
+        ) -> None:
+
+        response = self.domain.delete_workspace_storage_object(
+                workspace_id=workspace_id,
+                storage_name=storage_name,
+                # storage_prefix=storage_prefix,
+                object_name=object_name,
+            )
+        return response    
 
 ############### BOTO3 ###############
     def post_workspace_storage_object(self,
@@ -84,18 +99,5 @@ class SDKStorageAdaptor(IStorageInvoker):
                 storage_name=storage_name,
                 src_file=src_file,
                 dst_file=dst_file,
-            )
-        return response
-    
-    def delete_workspace_storage_object(self, 
-        workspace_id: str = "", 
-        storage_name: str = "",
-        object_name: str = "",
-        ) -> None:
-
-        response = self.domain.delete_workspace_storage_object(
-                workspace_id=workspace_id,
-                storage_name=storage_name,
-                object_name=object_name,
             )
         return response
