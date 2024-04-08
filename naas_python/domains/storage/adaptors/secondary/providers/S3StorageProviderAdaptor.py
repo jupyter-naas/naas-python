@@ -7,6 +7,7 @@ import os, json, re
 from logging import getLogger
 from datetime import datetime, timezone
 from urllib.parse import urlparse
+import mimetypes
 
 logger = getLogger(__name__)
 
@@ -19,7 +20,8 @@ from naas_python.domains.storage.StorageSchema import (
     FileNotFoundError,
     BadRequest,
     ForbiddenError,
-    ServiceAuthenticationError    
+    ServiceAuthenticationError,
+    ServiceStatusError
 )
 
 class S3StorageProviderAdaptor(IStorageProviderAdaptor):
@@ -30,7 +32,7 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         super().__init__()
         self.MAX_RETRY_ATTEMPTS = 1
 
-        self.naas_bucket = os.getenv("NAAS_ENDPOINT_URL") or "api-naas-storage" #TODO create naas-storage with versioning
+        self.naas_bucket = os.getenv("NAAS_ENDPOINT_URL") or "api-naas-storage"
         self.naas_credentials=os.path.expanduser("~/.naas/credentials")
         self.naas_workspace_id=None
         self.naas_workspace_id=None
@@ -51,8 +53,13 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         src_file: str,
         dst_file: str,
     ) -> None:
+        
         if dst_file.endswith('/'):
             dst_file = dst_file + os.path.basename(src_file)
+
+        if dst_file == '.':
+            dst_file = os.path.basename(src_file)
+
         key = f"{workspace_id}/{storage_name}/{dst_file}"
         key = self.__clean_path(key)
 
@@ -61,11 +68,13 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
                 reponse = self.__read_naas_credentials(workspace_id, storage_name)
                 # print("token:", reponse)
             
+            content_type, _ = mimetypes.guess_type(src_file)
+            print("content_type:", content_type)
             s3 = boto3.client('s3')
-            response = s3.upload_file(Filename=src_file, Bucket=self.naas_bucket, Key=key)
+            response = s3.upload_file(Filename=src_file, Bucket=self.naas_bucket, Key=key,  ExtraArgs={'ContentType': content_type})
             # print("end uploading file:",response)
             return response
-        
+
         except Exception as e:
             self.__handle_exceptions(str(e))
 
@@ -76,8 +85,12 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         src_file: str, 
         dst_file:str, 
     ) -> bytes :
-        if dst_file.endswith('/') or dst_file.endswith('.'):
+        
+        if dst_file.endswith('/') :
             dst_file = dst_file + os.path.basename(src_file)
+        if dst_file == '.':
+            dst_file = os.path.basename(src_file)
+
         filename=dst_file
         self.__clean_path(filename)
         object_key = workspace_id + "/" + storage_name + "/" + src_file
@@ -242,8 +255,11 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
 
         if isinstance(exception, ServiceAuthenticationError):
             raise ServiceAuthenticationError(exception)
-
-        if "An error occurred (ExpiredToken)" in exception and "The provided token has expired." in exception:
+        elif isinstance(exception, ServiceStatusError): #TODO why not catch ?
+            raise ServiceStatusError(exception)
+        elif 'Workspace user' in str(exception) and 'not found' in str(exception):
+            raise ServiceAuthenticationError("Workspace user not found.")
+        elif "An error occurred (ExpiredToken)" in exception and "The provided token has expired." in exception:
                 raise ExpiredToken("The provided token has expired. Please Retry.")            
         elif "An error occurred (400)" in exception and "Bad Request" in exception :
             raise BadRequest(f"Bad request. Please retry in few seconds.")

@@ -65,15 +65,13 @@ class IStorageProviderAdaptor(metaclass=ABCMeta):
     def get_workspace_storage_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
-        # storage_type: str,
         src_file: str,
         dst_file: str,
     ) -> bytes:
         raise NotImplementedError
     
     @abstractmethod    
-    def create_workspace_storage_credentials(self,
-        # storage_type: str,                                     
+    def create_workspace_storage_credentials(self,                                    
         workspace_id: str,
         storage_name: Storage.__fields__['name'],        
     ) -> None:
@@ -84,7 +82,7 @@ class IStorageDomain(metaclass=ABCMeta):
     adaptor: IStorageAdaptor
     storage_provider_adaptors : List[IStorageProviderAdaptor]
     # storage_provider_adaptors : Map[str, IStorageProviderAdaptor]
-    # to be validated
+    #TODO to be validated
 
     @abstractmethod    
     def create_workspace_storage(self,
@@ -118,7 +116,6 @@ class IStorageDomain(metaclass=ABCMeta):
     def delete_workspace_storage_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
-        # storage_prefix: Object.__fields__['prefix'],
         object_name: Object.__fields__['name'],
     ) -> None:
         raise NotImplementedError     
@@ -211,4 +208,6 @@ class APIError(NaasException):
 class StorageProviderNotFound(NaasException):
     pass
 class ServiceAuthenticationError(NaasException):
+    pass
+class ServiceStatusError(NaasException):
     pass
