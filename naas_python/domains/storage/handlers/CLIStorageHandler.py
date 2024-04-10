@@ -8,8 +8,6 @@ import logging
 logging.debug("CliStorageHandler.py : Initializing secondaryAdaptor")
 secondaryAdaptor = NaasStorageAPIAdaptor()
 
-# du coup peu importe le provider utilisé on charge tout ?
-#TODO le sdk
 s3 = S3StorageProviderAdaptor()
 #azure = AzureStorageProviderAdaptor()
 
