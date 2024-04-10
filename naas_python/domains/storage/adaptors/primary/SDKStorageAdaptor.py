@@ -40,7 +40,6 @@ class SDKStorageAdaptor(IStorageInvoker):
             )
         return response  
 
-#TODO move boto3
 # Workspace Storage Object
     def list_workspace_storage_object(self, 
         workspace_id: str = "", 
@@ -57,14 +56,12 @@ class SDKStorageAdaptor(IStorageInvoker):
     def delete_workspace_storage_object(self, 
         workspace_id: str = "", 
         storage_name: str = "",
-        # storage_prefix: str = "",
         object_name: str = "",
         ) -> None:
 
         response = self.domain.delete_workspace_storage_object(
                 workspace_id=workspace_id,
                 storage_name=storage_name,
-                # storage_prefix=storage_prefix,
                 object_name=object_name,
             )
         return response    

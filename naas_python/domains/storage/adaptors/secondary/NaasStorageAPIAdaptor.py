@@ -22,18 +22,14 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         super().__init__()                  
 
     def __handle_response(self, api_response: requests.Response) -> dict:
-
-        #TODO handle API ERRORS
         if api_response.status_code == 201:
             return None
-        
         elif api_response.status_code == 200:
             return api_response.json()
-        
         elif isinstance(api_response.json().get("error"), dict) and api_response.json().get("error")["error"] == 1:
             raise StorageNotFoundError(api_response.json().get("error")["message"])
         elif isinstance(api_response.json().get("error"), dict) and api_response.json().get("error")["error"] == 2:
-            raise StorageNotFoundError(api_response.json().get("error")["message"])
+            raise StorageNotFoundError(api_response.json().get("error")["message"])               
         else:
             logger.error(api_response.json())
             raise APIError(api_response.json())
@@ -52,7 +48,6 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
                 {"storage": {"name": storage_name} }
             ),
         )
-
         return self.__handle_response(api_response)
     
     @BaseAPIAdaptor.service_status_decorator
@@ -98,7 +93,6 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
     def delete_workspace_storage_object(self, 
         workspace_id: str, 
         storage_name: str,
-        # storage_prefix: str,
         object_name: str,
     ) -> None:
         object=os.path.basename(object_name)

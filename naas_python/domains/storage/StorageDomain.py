@@ -21,7 +21,7 @@ class StorageDomain(IStorageDomain):
     def create_workspace_storage(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name'],
-    ) -> None:
+    ) -> None: #TODO rework return type
         response = self.adaptor.create_workspace_storage(
             workspace_id=workspace_id, 
             storage_name=storage_name,
@@ -61,13 +61,11 @@ class StorageDomain(IStorageDomain):
     def delete_workspace_storage_object(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name'],
-        # storage_prefix: Object.__fields__['prefix'],
         object_name: Object.__fields__['name'],
     ) -> None:
         response = self.adaptor.delete_workspace_storage_object(
             workspace_id=workspace_id,
             storage_name=storage_name,
-            # storage_prefix=storage_prefix,
             object_name=object_name,
         )
         return response    
@@ -76,18 +74,16 @@ class StorageDomain(IStorageDomain):
         workspace_id: str,
         storage_name: Storage.__fields__['name'],        
     ) -> None:
-        response = self.adaptor.generate_credentials(
-            workspace_id=workspace_id,           
-            storage_name=storage_name
-        )
-        return response  
+        credentials = self.adaptor.generate_credentials(workspace_id, storage_name)
+        self.storage_provider.save_naas_credentials(workspace_id, storage_name, credentials)
+        return None  
 
-    #TODO
+############### BOTO ###############    
     def __get_storage_provider(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name']
     ) -> str:
-        # This function should check in ~.naas/credentials to grab the provider id (s3;azure;gcp;...)
+        #TODO This function should check in ~.naas/credentials to grab the provider id (s3;azure;gcp;...)
         return 's3'
 
 
@@ -105,8 +101,12 @@ class StorageDomain(IStorageDomain):
         
         storage_provider : IStorageProviderAdaptor = self.storage_provider_adaptors[storage_provider_id]
 
-        response = storage_provider.post_workspace_storage_object(workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file)
-        return response
+        if not storage_provider.valid_naas_credentials(workspace_id, storage_name):
+            credentials = self.adaptor.generate_credentials(workspace_id, storage_name)
+            storage_provider.save_naas_credentials(workspace_id, storage_name, credentials)
+
+        storage_provider.post_workspace_storage_object(workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file)
+        return None
     
     def get_workspace_storage_object(self,
         workspace_id: str,
@@ -121,6 +121,10 @@ class StorageDomain(IStorageDomain):
             raise StorageProviderNotFound(f'Provider "{storage_provider_id}" is not implemented or not loaded.')
         
         storage_provider : IStorageProviderAdaptor = self.storage_provider_adaptors[storage_provider_id]
+
+        if not storage_provider.valid_naas_credentials(workspace_id, storage_name):
+            credentials = self.adaptor.generate_credentials(workspace_id, storage_name)
+            storage_provider.save_naas_credentials(workspace_id, storage_name, credentials)
 
         response = storage_provider.get_workspace_storage_object(workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file)
         return response

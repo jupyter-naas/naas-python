@@ -70,13 +70,6 @@ class IStorageProviderAdaptor(metaclass=ABCMeta):
     ) -> bytes:
         raise NotImplementedError
     
-    @abstractmethod    
-    def create_workspace_storage_credentials(self,                                    
-        workspace_id: str,
-        storage_name: Storage.__fields__['name'],        
-    ) -> None:
-        raise NotImplementedError
-    
 # Domain
 class IStorageDomain(metaclass=ABCMeta):
     adaptor: IStorageAdaptor
@@ -210,4 +203,6 @@ class StorageProviderNotFound(NaasException):
 class ServiceAuthenticationError(NaasException):
     pass
 class ServiceStatusError(NaasException):
+    pass
+class ObjectAlreadyExists(NaasException):
     pass
