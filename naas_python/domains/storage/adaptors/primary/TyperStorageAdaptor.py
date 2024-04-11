@@ -4,6 +4,7 @@ from typer.core import TyperGroup
 import typer
 import os, json
 from rich.console import Console
+from rich.table import Table
 from logging import getLogger
 
 from naas_python.utils.cicd import Pipeline
@@ -94,15 +95,21 @@ class TyperStorageAdaptor(IStorageInvoker):
         )
     ):
             """List Workspace Storages"""
-            print("listing storage...")
             list_storage = self.domain.list_workspace_storage(
                 workspace_id=workspace_id,
             )
-            
-            #TODO better print
-            print("storages",list_storage)
-    
-    #TODO better print                
+            if rich_preview:
+                console = Console()
+                table = Table(show_header=True, header_style="bold black")
+                table.add_column("Name")
+
+                for storage in list_storage['storage']:
+                    table.add_row(storage['name'])
+
+                console.print(table)
+            else:
+                print(list_storage)
+         
     def list_workspace_storage_object(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
         storage_name: str = typer.Option(..., "--storage", "-s", help="Name of the storage"),
@@ -115,15 +122,26 @@ class TyperStorageAdaptor(IStorageInvoker):
         )
     ):
             """List a Workspace Storage Objects"""
-            print("listing storage objects...")
-            list_storage = self.domain.list_workspace_storage_object(
+            list_storage_object = self.domain.list_workspace_storage_object(
                 workspace_id=workspace_id,
                 storage_name=storage_name,
                 storage_prefix=storage_prefix,
             )
+            if rich_preview:
+                console = Console()
+                table = Table(show_header=True, header_style="bold black")
+                table.add_column("Name")
+                table.add_column("Type")
+                table.add_column("Prefix")
+                table.add_column("Size")
+                table.add_column("Last Modified")
 
-            for object in list_storage["object"]:
-                print(object)
+                for object in list_storage_object["object"]:
+                    table.add_row(object['name'], object['type'], object['prefix'], object['size'], object['lastmodified'])
+
+                console.print(table)
+            else:
+                print(list_storage_object)
 
     def delete_workspace_storage_object(self,                                             
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
@@ -143,7 +161,7 @@ class TyperStorageAdaptor(IStorageInvoker):
             storage_name=storage_name,
             object_name=object_name,
         )
-        print("Object deleted.")               
+        print("Object deleted.")
                 
     def create_workspace_storage_credentials(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),

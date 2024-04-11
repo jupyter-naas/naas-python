@@ -32,7 +32,6 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         self.naas_bucket = os.getenv("NAAS_ENDPOINT_URL") or "api-naas-storage"
         self.naas_credentials=os.path.expanduser("~/.naas/credentials")
         self.naas_workspace_id=None
-        self.naas_workspace_id=None
 
         self.NAAS_WORKSPACE_ID=os.environ.get('NAAS_WORKSPACE_ID')
         self.NAAS_STORAGE_NAME=os.environ.get('NAAS_STORAGE_NAME')
@@ -48,7 +47,8 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         storage_name: Storage.__fields__['name'],
         src_file: str,
         dst_file: str,
-    ) -> None:
+    ) -> dict:
+        response = {}
         
         if dst_file.endswith('/'):
             dst_file = dst_file + os.path.basename(src_file)
@@ -67,9 +67,9 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
             s3 = boto3.client('s3')
             response = s3.upload_file(Filename=src_file, Bucket=self.naas_bucket, Key=key,  ExtraArgs={'ContentType': content_type})
             return response
-
         except Exception as e:
             self.__handle_exceptions(str(e))
+        return response
 
        
     def get_workspace_storage_object(self, 
@@ -78,7 +78,8 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         src_file: str, 
         dst_file:str, 
     ) -> bytes :
-        
+        response = b''
+
         if dst_file.endswith('/') :
             dst_file = dst_file + os.path.basename(src_file)
         if dst_file == '.':
@@ -98,7 +99,8 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
             return response
         
         except Exception as e:
-            self.__handle_exceptions(str(e))  
+            self.__handle_exceptions(str(e))
+        return response
     
 
 ############### INTERNAL ###############
@@ -108,7 +110,7 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         path=re.sub(r'/{2,}', '/', path)
         return path
         
-    def __s3_token_is_expired(self, expiration:str)-> None:
+    def __s3_token_is_expired(self, expiration:str)-> bool:
         if expiration is not None:    
             if datetime.strptime(expiration, "%Y-%m-%d %H:%M:%S%z") < datetime.now(timezone.utc):
                 return True
@@ -192,9 +194,12 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
                     return False
                 else:
                     return True
+        else:
+            return True
+        return True
 
 
-    def save_naas_credentials(self, workspace_id:str, storage_name:str, credentials:dict)-> None:
+    def save_naas_credentials(self, workspace_id:str, storage_name:str, credentials:dict)-> str:
 
         self.naas_bucket = urlparse(credentials['credentials']['s3']['endpoint_url']).netloc
         self.naas_workspace_id = urlparse(credentials['credentials']['s3']['endpoint_url']).path.split('/')[1]

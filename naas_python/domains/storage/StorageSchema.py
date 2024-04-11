@@ -16,20 +16,20 @@ class IStorageAdaptor(metaclass=ABCMeta):
     def create_workspace_storage(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
-    ) -> None:
+    ) -> dict[str, str]:
         raise NotImplementedError
     
     @abstractmethod
     def delete_workspace_storage(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError
     
     @abstractmethod
     def list_workspace_storage(self, 
         workspace_id: str, 
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError
     
     @abstractmethod    
@@ -37,7 +37,7 @@ class IStorageAdaptor(metaclass=ABCMeta):
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         storage_prefix: Object.__fields__['prefix'],        
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError
     
     @abstractmethod    
@@ -45,7 +45,7 @@ class IStorageAdaptor(metaclass=ABCMeta):
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         object_name: Object.__fields__['name'],   
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError    
     
 class IStorageProviderAdaptor(metaclass=ABCMeta):
@@ -58,7 +58,7 @@ class IStorageProviderAdaptor(metaclass=ABCMeta):
         storage_name: Storage.__fields__['name'],
         src_file: str,
         dst_file: str,
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError
 
     @abstractmethod
@@ -81,20 +81,20 @@ class IStorageDomain(metaclass=ABCMeta):
     def create_workspace_storage(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError
 
     @abstractmethod    
     def delete_workspace_storage(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError
     
     @abstractmethod
     def list_workspace_storage(self, 
         workspace_id: str, 
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError
     
     @abstractmethod    
@@ -102,7 +102,7 @@ class IStorageDomain(metaclass=ABCMeta):
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         storage_prefix: Object.__fields__['prefix'],        
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError
 
     @abstractmethod    
@@ -110,7 +110,7 @@ class IStorageDomain(metaclass=ABCMeta):
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         object_name: Object.__fields__['name'],
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError     
     
     @abstractmethod
@@ -119,7 +119,7 @@ class IStorageDomain(metaclass=ABCMeta):
         storage_name: Storage.__fields__['name'],
         src_file: str,
         dst_file: str,
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError
     
     @abstractmethod
@@ -136,7 +136,7 @@ class IStorageDomain(metaclass=ABCMeta):
     def create_workspace_storage_credentials(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],        
-    ) -> None:
+    ) -> dict:
         raise NotImplementedError    
     
 # Primary Adaptor

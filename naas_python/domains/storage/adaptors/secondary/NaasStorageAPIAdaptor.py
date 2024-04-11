@@ -3,7 +3,6 @@ import os
 from logging import getLogger
 import pydash as _
 
-
 logger = getLogger(__name__)
 
 import requests
@@ -38,7 +37,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
     def create_workspace_storage(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name']
-    ) -> None:
+    ) -> dict:
         _url = f"{self.host}/workspace/{workspace_id}/storage"
 
         api_response = self.make_api_request(
@@ -54,7 +53,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
     def delete_workspace_storage(self, 
         workspace_id: str, 
         storage_name: str
-    ) -> None:
+    ) -> dict:
         _url = f"{self.host}/workspace/{workspace_id}/storage/?storage_name={storage_name}"
         
         api_response = self.make_api_request(
@@ -66,7 +65,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
     @BaseAPIAdaptor.service_status_decorator
     def list_workspace_storage(self, 
         workspace_id: str,
-    ) -> None:
+    ) -> dict:
         _url = f"{self.host}/workspace/{workspace_id}/storage"
 
         api_response = self.make_api_request(
@@ -80,7 +79,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         workspace_id: str, 
         storage_name: str,
         storage_prefix: str,
-    ) -> None:
+    ) -> dict:
         _url = f"{self.host}/workspace/{workspace_id}/storage/{storage_name}?prefix={storage_prefix}"
 
         api_response = self.make_api_request(
@@ -94,7 +93,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         workspace_id: str, 
         storage_name: str,
         object_name: str,
-    ) -> None:
+    ) -> dict:
         object=os.path.basename(object_name)
         prefix=os.path.dirname(object_name)
         _url = f"{self.host}/workspace/{workspace_id}/storage/{storage_name}?prefix={prefix}&object={object}"

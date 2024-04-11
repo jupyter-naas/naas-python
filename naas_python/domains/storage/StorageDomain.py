@@ -21,7 +21,7 @@ class StorageDomain(IStorageDomain):
     def create_workspace_storage(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name'],
-    ) -> None: #TODO rework return type
+    ) -> dict:
         response = self.adaptor.create_workspace_storage(
             workspace_id=workspace_id, 
             storage_name=storage_name,
@@ -31,7 +31,7 @@ class StorageDomain(IStorageDomain):
     def delete_workspace_storage(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name']
-    ) -> None:
+    ) -> dict:
         response = self.adaptor.delete_workspace_storage(
             workspace_id=workspace_id,
             storage_name=storage_name,
@@ -40,7 +40,7 @@ class StorageDomain(IStorageDomain):
     
     def list_workspace_storage(self, 
         workspace_id: str, 
-    ) -> None:
+    ) -> dict:
         response = self.adaptor.list_workspace_storage(
             workspace_id=workspace_id,
         )
@@ -50,7 +50,7 @@ class StorageDomain(IStorageDomain):
         workspace_id: str, 
         storage_name: Storage.__fields__['name'],
         storage_prefix: Object.__fields__['prefix'],
-    ) -> None:
+    ) -> dict:
         response = self.adaptor.list_workspace_storage_object(
             workspace_id=workspace_id,
             storage_name=storage_name,
@@ -62,7 +62,7 @@ class StorageDomain(IStorageDomain):
         workspace_id: str, 
         storage_name: Storage.__fields__['name'],
         object_name: Object.__fields__['name'],
-    ) -> None:
+    ) -> dict:
         response = self.adaptor.delete_workspace_storage_object(
             workspace_id=workspace_id,
             storage_name=storage_name,
@@ -73,10 +73,10 @@ class StorageDomain(IStorageDomain):
     def create_workspace_storage_credentials(self,         
         workspace_id: str,
         storage_name: Storage.__fields__['name'],        
-    ) -> None:
+    ) -> dict:
         credentials = self.adaptor.generate_credentials(workspace_id, storage_name)
         self.storage_provider.save_naas_credentials(workspace_id, storage_name, credentials)
-        return None  
+        return dict  
 
 ############### BOTO ###############    
     def __get_storage_provider(self,
@@ -92,7 +92,7 @@ class StorageDomain(IStorageDomain):
         storage_name: Storage.__fields__['name'],
         src_file: str,
         dst_file: str,  
-    ) -> None:
+    ) -> dict:
 
         storage_provider_id = self.__get_storage_provider(workspace_id, storage_name)
 
@@ -105,8 +105,8 @@ class StorageDomain(IStorageDomain):
             credentials = self.adaptor.generate_credentials(workspace_id, storage_name)
             storage_provider.save_naas_credentials(workspace_id, storage_name, credentials)
 
-        storage_provider.post_workspace_storage_object(workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file)
-        return None
+        response = storage_provider.post_workspace_storage_object(workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file)
+        return response
     
     def get_workspace_storage_object(self,
         workspace_id: str,
