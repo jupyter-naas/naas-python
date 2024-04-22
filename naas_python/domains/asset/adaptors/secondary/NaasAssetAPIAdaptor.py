@@ -40,21 +40,17 @@ class NaasAssetAPIAdaptor(BaseAPIAdaptor, IAssetAdaptor):
             else:
                 raise AssetInternalError(api_response.json()['message'])
         else:
-            raise Exception(f"An unknown error occurred: {api_response.json()['error']}")
+            raise Exception(f"An unknown error occurred: {api_response.json()}")
 
     @BaseAPIAdaptor.service_status_decorator
     def create_asset(self, workspace_id:str, asset_creation:AssetCreation) -> Asset:
         _url = f"{self.host}/workspace/{workspace_id}/asset/"
-        # _data = {
-        #     asset_creation
-        # }
 
         api_response = self.make_api_request(
             requests.post,
             _url,
             payload=json.dumps(asset_creation)
         )
-        # response = requests.post(_url, json=_data)
         return self._handle_response(api_response)
     
     @BaseAPIAdaptor.service_status_decorator
