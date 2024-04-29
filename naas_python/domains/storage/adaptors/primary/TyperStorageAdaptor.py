@@ -42,10 +42,10 @@ class TyperStorageAdaptor(IStorageInvoker):
         self.app.command("create-storage")(self.create_workspace_storage)
         self.app.command("delete-storage")(self.delete_workspace_storage)
         self.app.command("list-storage")(self.list_workspace_storage)
-        self.app.command("list")(self.list_workspace_storage_object)
-        self.app.command("post")(self.post_workspace_storage_object)
-        self.app.command("get")(self.get_workspace_storage_object)
-        self.app.command("delete")(self.delete_workspace_storage_object)
+        self.app.command("list-object")(self.list_workspace_storage_object)
+        self.app.command("put-object")(self.post_workspace_storage_object)
+        self.app.command("get-object")(self.get_workspace_storage_object)
+        self.app.command("delete-object")(self.delete_workspace_storage_object)
         self.app.command("connect")(self.create_workspace_storage_credentials)
 
 ############### API ###############
