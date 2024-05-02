@@ -14,8 +14,8 @@ requests = "^2.31.0"
 protobuf_to_pydantic = { version = "0.1.7.4" }
 cachetools = "^5.3.1"
 #naas-models = { git = "https://github.com/jupyter-naas/naas-models.git", tag = "v1.4.1", subdirectory = "python" }
-naas-models = "^1.4.1"
 jinja2 = "^3.0.1"
+naas-models = "^1.7.1"
 grpcio = "^1.60.0"
 pydash = "^7.0.7"
 
