@@ -14,6 +14,10 @@ from naas_python.domains.secret.handlers.CLISecretHandler import (
     primaryAdaptor as typerSecretAdaptor,
 )
 
+from naas_python.domains.asset.handlers.CLIAssetHandler import (
+    primaryAdaptor as typerAssetAdaptor,
+)
+
 
 def _create_cli_app():
     app = typer.Typer(
@@ -27,6 +31,7 @@ def _create_cli_app():
     app.add_typer(typerSpaceAdaptor.app, name="space")
     app.add_typer(typerRegistryAdaptor.app, name="registry")
     app.add_typer(typerSecretAdaptor.app, name="secret")
+    app.add_typer(typerAssetAdaptor.app, name="asset")
 
     return app
 

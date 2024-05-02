@@ -30,7 +30,7 @@ class IAssetAdaptor(metaclass=ABCMeta):
         raise NotImplementedError()
     
     @abstractmethod
-    def delete_asset(self, workspace_id:str, asset_id:str) -> dict:
+    def delete_asset(self, workspace_id:str, asset_id:str) -> None:
         raise NotImplementedError()
 
 # Domain
@@ -54,7 +54,7 @@ class IAssetDomain(metaclass=ABCMeta):
         raise NotImplementedError()    
     
     @abstractmethod
-    def delete_asset(self, workspace_id:str, asset_id:str) -> dict:
+    def delete_asset(self, workspace_id:str, asset_id:str) -> None:
         raise NotImplementedError()
 
 # Primary Adaptor

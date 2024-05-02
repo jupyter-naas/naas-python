@@ -8,7 +8,6 @@ from naas_python.domains.asset.AssetSchema import (
     AssetUpdate
 )
 
-#TODO
 # class SDKAssetAdaptor(IAssetInvoker):
 class SDKAssetAdaptor(IAssetPrimaryAdaptor):
     domain: IAssetDomain

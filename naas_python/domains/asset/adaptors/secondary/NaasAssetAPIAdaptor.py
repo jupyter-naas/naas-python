@@ -82,10 +82,10 @@ class NaasAssetAPIAdaptor(BaseAPIAdaptor, IAssetAdaptor):
         return self._handle_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
-    def delete_asset(self, workspace_id: str, asset_id: str) -> dict:
+    def delete_asset(self, workspace_id: str, asset_id: str) -> None:
         _url = f"{self.host}/workspace/{workspace_id}/asset/{asset_id}"
         api_response = self.make_api_request(
             requests.delete,
             _url
         )
-        return self._handle_response(api_response)
+        return None
