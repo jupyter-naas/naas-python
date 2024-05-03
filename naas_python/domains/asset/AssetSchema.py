@@ -19,11 +19,7 @@ class IAssetAdaptor(metaclass=ABCMeta):
     
     @abstractmethod
     def get_asset(self, workspace_id:str, asset_id:str) -> Asset:
-        raise NotImplementedError()
-
-    # @abstractmethod
-    # def get_asset_object(self, workspace_id:str, password:str, asset_id:str, ) -> dict:
-    #     raise NotImplementedError()     
+        raise NotImplementedError()  
 
     @abstractmethod
     def update_asset(self, workspace_id:str, asset_id:str, asset_update: AssetUpdate) -> Asset:
@@ -45,10 +41,6 @@ class IAssetDomain(metaclass=ABCMeta):
     def get_asset(self, workspace_id:str, asset_id:str) -> Asset:
         raise NotImplementedError()
 
-    # @abstractmethod
-    # def get_asset_object(self, workspace_id:str, asset_id:str, password:str) -> dict:
-    #     raise NotImplementedError()    
-
     @abstractmethod
     def update_asset(self, workspace_id:str, asset_id:str, asset_update: AssetUpdate) -> Asset:
         raise NotImplementedError()    
@@ -60,23 +52,3 @@ class IAssetDomain(metaclass=ABCMeta):
 # Primary Adaptor
 class IAssetPrimaryAdaptor:
     pass
-# class IAssetInvoker(metaclass=ABCMeta):
-#     @abstractmethod
-#     def create_asset(self, **kwargs):
-#         raise NotImplementedError()
-
-#     @abstractmethod
-#     def get_asset(self, **kwargs):
-#         raise NotImplementedError()
-
-#     @abstractmethod
-#     def get_asset_object(self, **kwargs):
-#         raise NotImplementedError()
-
-#     @abstractmethod
-#     def update_asset(self, **kwargs):
-#         raise NotImplementedError()
-
-    # @abstractmethod
-    # def delete_asset(self, **kwargs):
-    #     raise NotImplementedError()

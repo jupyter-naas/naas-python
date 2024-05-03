@@ -22,9 +22,6 @@ class AssetDomain(IAssetDomain):
         asset = self.adaptor.get_asset(workspace_id, asset_id)
         return asset
 
-    # def get_asset_object(self, workspace_id:str, asset_id:str, password:str) -> dict:
-    #     asset_url = self.adaptor.get_asset_object(workspace_id, asset_id, password)
-    #     return asset_url
 
     def update_asset(self, workspace_id:str, asset_id:str, asset_update: AssetUpdate) -> Asset:
         response = self.adaptor.update_asset(workspace_id, asset_id, asset_update)

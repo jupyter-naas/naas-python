@@ -62,15 +62,6 @@ class NaasAssetAPIAdaptor(BaseAPIAdaptor, IAssetAdaptor):
         )
         return self._handle_response(api_response)
     
-    # @BaseAPIAdaptor.service_status_decorator
-    # def get_asset_object(self, workspace_id:str, asset_id:str, password:str) -> dict:
-    #     _url = f"{self.host}/workspace/{workspace_id}/asset/{asset_id}/object/?password={password}"
-    #     api_response = self.make_api_request(
-    #         requests.get,
-    #         _url
-    #     )
-    #     return self._handle_response(api_response)
-    
     @BaseAPIAdaptor.service_status_decorator
     def update_asset(self, workspace_id:str, asset_id:str, asset_update: AssetUpdate) -> Asset:
         _url = f"{self.host}/workspace/{workspace_id}/asset/{asset_id}"
