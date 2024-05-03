@@ -22,7 +22,7 @@ class ServiceStatusError(NaasException):
 
 class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
     host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "https://api.naas.ai")
-    #host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "http://localhost:8000")
+    # host = os.environ.get("NAAS_PYTHON_API_BASE_URL", "http://localhost:8000")
     # Cache name is the name of the calling module
     cache_name = __name__
     cache_expire_after = 60  # Cache expires after 60 seconds
@@ -57,7 +57,7 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
             )
 
     @staticmethod
-    def service_status_decorator(func):
+    def  service_status_decorator(func):
         def wrapper(self, *args, **kwargs):
             self._check_service_status()
             return func(self, *args, **kwargs)
