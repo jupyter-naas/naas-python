@@ -38,10 +38,10 @@ class TyperAssetAdaptor(IAssetPrimaryAdaptor):
             context_settings={"help_option_names": ["-h", "--help"]},
         )
 
-        self.app.command("create-asset")(self.create_asset)
-        self.app.command("delete-asset")(self.delete_asset)
-        self.app.command("get-asset")(self.get_asset)
-        self.app.command("update-asset")(self.update_asset)
+        self.app.command("create")(self.create_asset)
+        self.app.command("delete")(self.delete_asset)
+        self.app.command("get")(self.get_asset)
+        self.app.command("update")(self.update_asset)
 
     def create_asset(self, 
         workspace_id:str = typer.Option(None, "--workspace-id", "-w", help="ID of the workspace"),
