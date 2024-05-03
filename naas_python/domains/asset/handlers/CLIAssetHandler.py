@@ -5,11 +5,8 @@ from naas_python.domains.asset.adaptors.primary.TyperAssetAdaptor import TyperAs
 
 import logging
 
-logging.debug("CliAssetHandler.py : Initializing secondaryAdaptor")
 secondaryAdaptor = NaasAssetAPIAdaptor()
 
-logging.debug("CliAssetHandler.py : Initializing domain")
 domain = AssetDomain(secondaryAdaptor)
 
-logging.debug("CliAssetHandler.py : Initializing primaryAdaptor")
 primaryAdaptor = TyperAssetAdaptor(domain)
