@@ -39,9 +39,9 @@ class TyperStorageAdaptor(IStorageInvoker):
             context_settings={"help_option_names": ["-h", "--help"]},
         )
 
-        self.app.command("create-storage")(self.create_workspace_storage)
-        self.app.command("delete-storage")(self.delete_workspace_storage)
-        self.app.command("list-storage")(self.list_workspace_storage)
+        self.app.command("create")(self.create_workspace_storage)
+        self.app.command("delete")(self.delete_workspace_storage)
+        self.app.command("list")(self.list_workspace_storage)
         self.app.command("list-object")(self.list_workspace_storage_object)
         self.app.command("put-object")(self.post_workspace_storage_object)
         self.app.command("get-object")(self.get_workspace_storage_object)
