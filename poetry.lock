@@ -389,18 +389,19 @@ types-protobuf = ">=4.24"
 
 [[package]]
 name = "naas-models"
-version = "1.11.1"
+version = "1.11.2"
 description = "Library containing all models used in the naas ecosystem. You can use this library to know how to talk to our micro services."
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "naas_models-1.11.1-py3-none-any.whl", hash = "sha256:c0d31ef8abead0c996dd27cceb4737f87f947e33d2d058271f9fa99e2fa21bf3"},
-    {file = "naas_models-1.11.1.tar.gz", hash = "sha256:500b5573603f19784f422c89525d7d822ee51aa968976e2f8d30c65337a3bd60"},
+    {file = "naas_models-1.11.2-py3-none-any.whl", hash = "sha256:e73791e38ad6915100bf59bef122ff1ec8e0a6c7d129680a8e5c5f9dc8977418"},
+    {file = "naas_models-1.11.2.tar.gz", hash = "sha256:824b706da9f12c83ebc32b5bd19047db83a57618c999db65c080cbfce7d4967b"},
 ]
 
 [package.dependencies]
 protobuf = ">=5.26.1,<6.0.0"
 protobuf-to-pydantic = {version = "0.2.6.2", extras = ["mypy-protobuf"]}
+pydantic = ">=2.0,<3.0"
 
 [[package]]
 name = "packaging"
@@ -760,4 +761,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "a4564a73c18e720c7b3fbc460b48aa9e7066f05b02cb528a133d154fe72825e9"
+content-hash = "876f1e50ce2fffa42165393830a4cecc4aabfa5e8ec1e9421c7e3d4dc0df634c"
