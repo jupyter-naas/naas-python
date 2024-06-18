@@ -84,7 +84,7 @@ class BaseAPIAdaptor(NaasSpaceAuthenticatorAdapter):
             headers.update({"Authorization": f"Bearer {self.jwt_token()}"})
 
         try:
-            api_response = method(url, data=payload, headers=headers)
+            api_response = method(url, data=payload if type(payload) is str else json.dumps(payload), headers=headers)
             api_response.raise_for_status()
             return api_response
 
