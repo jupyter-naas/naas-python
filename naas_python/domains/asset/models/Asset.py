@@ -1,0 +1,1 @@
+from naas_models.pydantic.asset_p2p import *
