@@ -54,7 +54,7 @@ def test_create_valid_registry(mock_domain, capsys):
 
 def test_create_invalid_registry(mock_domain):
     app = TyperRegistryAdaptor(mock_domain)
-    with pytest.raises(ValidationError, match="string does not match regex"):
+    with pytest.raises(ValidationError, match="1 validation error for Registry"):
         app.create("invalid_registry_name", rich_preview=False)
 
 
