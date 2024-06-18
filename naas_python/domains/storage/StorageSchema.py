@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
-from typing import List
+from typing import Mapping
 
 from naas_models.pydantic.storage_p2p import *
 from .models.Storage import Storage, Object
@@ -48,6 +48,10 @@ class IStorageAdaptor(metaclass=ABCMeta):
     ) -> dict:
         raise NotImplementedError    
     
+    @abstractmethod
+    def generate_credentials(self, workspace_id :str, storage_name: str) -> dict:
+        raise NotImplementedError
+    
 class IStorageProviderAdaptor(metaclass=ABCMeta):
 
     provider_id : str
@@ -70,10 +74,14 @@ class IStorageProviderAdaptor(metaclass=ABCMeta):
     ) -> bytes:
         raise NotImplementedError
     
+    @abstractmethod
+    def save_naas_credentials(self, workspace_id:str, storage_name:str, credentials:dict)-> str:
+        raise NotImplementedError
+    
 # Domain
 class IStorageDomain(metaclass=ABCMeta):
     adaptor: IStorageAdaptor
-    storage_provider_adaptors : List[IStorageProviderAdaptor]
+    storage_provider_adaptors : Mapping[str, IStorageProviderAdaptor]
     # storage_provider_adaptors : Map[str, IStorageProviderAdaptor]
     #TODO to be validated
 
