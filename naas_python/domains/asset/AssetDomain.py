@@ -15,18 +15,18 @@ class AssetDomain(IAssetDomain):
         self.adaptor = adaptor
 
     def create(self, workspace_id:str, asset_creation:AssetCreation) -> Asset:
-        asset = self.adaptor.create(workspace_id, asset_creation)
+        asset = self.adaptor.create_asset(workspace_id, asset_creation)
         return asset
     
     def get(self, workspace_id:str, asset_id:str) -> Asset:
-        asset = self.adaptor.get(workspace_id, asset_id)
+        asset = self.adaptor.get_asset(workspace_id, asset_id)
         return asset
 
 
     def update(self, workspace_id:str, asset_id:str, asset_update: AssetUpdate) -> Asset:
-        response = self.adaptor.update(workspace_id, asset_id, asset_update)
+        response = self.adaptor.update_asset(workspace_id, asset_id, asset_update)
         return response
 
     def delete(self, workspace_id:str, asset_id:str) -> None:
-        self.adaptor.delete(workspace_id, asset_id)
+        self.adaptor.delete_asset(workspace_id, asset_id)
         return None
