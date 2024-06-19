@@ -43,9 +43,10 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         api_response = self.make_api_request(
             requests.post,
             _url,
-            payload=json.dumps(
-                {"storage": {"name": storage_name} }
-            ),
+            payload={
+                "storage": 
+                    {"name": storage_name}
+            },
         )
         return self.__handle_response(api_response)
     
@@ -112,8 +113,9 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         api_response = self.make_api_request(
             requests.post,
             _url,
-            payload=json.dumps(
-                {"name": storage_name}
-            ),            
+            payload={
+                "name": storage_name
+            }
+            ,            
         )
         return self.__handle_response(api_response)

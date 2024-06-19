@@ -1,6 +1,6 @@
 from .models.Storage import Storage
 
-from typing import List
+from typing import Mapping
 
 from naas_python.domains.storage.StorageSchema import (
     IStorageDomain,
@@ -11,11 +11,11 @@ from naas_python.domains.storage.StorageSchema import (
     StorageProviderNotFound
 )
 class StorageDomain(IStorageDomain):
-    def __init__(self, adaptor: IStorageAdaptor, storage_provider_adaptors : List[IStorageProviderAdaptor]):
+    def __init__(self, adaptor: IStorageAdaptor, storage_provider_adaptors : Mapping[str, IStorageProviderAdaptor]):
         # List[IStorageProviderAdaptor])
         #Map[str : IStorageProviderAdaptor])
-        self.adaptor = adaptor
-        self.storage_provider_adaptors = storage_provider_adaptors
+        self.adaptor : IStorageAdaptor = adaptor
+        self.storage_provider_adaptors : Mapping[str, IStorageProviderAdaptor] = storage_provider_adaptors
 
 ############### API ###############
     def create_workspace_storage(self, 
@@ -75,8 +75,8 @@ class StorageDomain(IStorageDomain):
         storage_name: Storage.__fields__['name'],        
     ) -> dict:
         credentials = self.adaptor.generate_credentials(workspace_id, storage_name)
-        self.storage_provider.save_naas_credentials(workspace_id, storage_name, credentials)
-        return dict  
+        self.__get_storage_provider_adaptor(workspace_id=workspace_id, storage_name=storage_name).save_naas_credentials(workspace_id, storage_name, credentials)
+        return credentials  
 
 ############### BOTO ###############    
     def __get_storage_provider(self,
@@ -85,6 +85,15 @@ class StorageDomain(IStorageDomain):
     ) -> str:
         #TODO This function should check in ~.naas/credentials to grab the provider id (s3;azure;gcp;...)
         return 's3'
+
+    def __get_storage_provider_adaptor(self,
+                                       workspace_id: str,
+                                       storage_name: Storage.__fields__['name']
+                                       ) -> IStorageProviderAdaptor:
+        storage_provider_id = self.__get_storage_provider(workspace_id, storage_name)
+        if storage_provider_id not in self.storage_provider_adaptors:
+            raise StorageProviderNotFound(f'Provider "{storage_provider_id}" is not implemented or not loaded.')
+        return self.storage_provider_adaptors[storage_provider_id]
 
 
     def post_workspace_storage_object(self, 
