@@ -105,9 +105,10 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         )
         return self.__handle_response(api_response)
 
+    @BaseAPIAdaptor.service_status_decorator
     def generate_credentials(self, workspace_id :str, storage_name: str) -> dict:
 
-        _url = f"{self.host}/workspace/{workspace_id}/storage/credentials"
+        _url = f"{self.host}/workspace/{workspace_id}/storage/credentials/"
 
         api_response = self.make_api_request(
             requests.post,
