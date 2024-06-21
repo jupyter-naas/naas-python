@@ -75,7 +75,11 @@ class IStorageProviderAdaptor(metaclass=ABCMeta):
         raise NotImplementedError
     
     @abstractmethod
-    def save_naas_credentials(self, workspace_id:str, storage_name:str, credentials:dict)-> str:
+    def save_naas_credentials(self, workspace_id:str, storage_name:str, credentials:str)-> None:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def valid_naas_credentials(self, workspace_id:str, storage_name:str)-> bool:
         raise NotImplementedError
     
 # Domain

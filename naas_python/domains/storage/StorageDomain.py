@@ -1,6 +1,7 @@
 from .models.Storage import Storage
 
 from typing import Mapping
+import json
 
 from naas_python.domains.storage.StorageSchema import (
     IStorageDomain,
@@ -75,7 +76,8 @@ class StorageDomain(IStorageDomain):
         storage_name: Storage.__fields__['name'],        
     ) -> dict:
         credentials = self.adaptor.generate_credentials(workspace_id, storage_name)
-        self.__get_storage_provider_adaptor(workspace_id=workspace_id, storage_name=storage_name).save_naas_credentials(workspace_id, storage_name, credentials)
+        json_credentials = json.dumps(credentials)
+        self.__get_storage_provider_adaptor(workspace_id=workspace_id, storage_name=storage_name).save_naas_credentials(workspace_id, storage_name, json_credentials)
         return credentials  
 
 ############### BOTO ###############    
@@ -110,9 +112,10 @@ class StorageDomain(IStorageDomain):
         
         storage_provider : IStorageProviderAdaptor = self.storage_provider_adaptors[storage_provider_id]
 
-        if not storage_provider.valid_naas_credentials(workspace_id, storage_name):
+        if  storage_provider.valid_naas_credentials(workspace_id, storage_name) is False:
             credentials = self.adaptor.generate_credentials(workspace_id, storage_name)
-            storage_provider.save_naas_credentials(workspace_id, storage_name, credentials)
+            json_credentials = json.dumps(credentials)
+            storage_provider.save_naas_credentials(workspace_id, storage_name, json_credentials)
 
         response = storage_provider.post_workspace_storage_object(workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file)
         return response
@@ -130,10 +133,12 @@ class StorageDomain(IStorageDomain):
             raise StorageProviderNotFound(f'Provider "{storage_provider_id}" is not implemented or not loaded.')
         
         storage_provider : IStorageProviderAdaptor = self.storage_provider_adaptors[storage_provider_id]
-
-        if not storage_provider.valid_naas_credentials(workspace_id, storage_name):
+        
+        if  storage_provider.valid_naas_credentials(workspace_id, storage_name) is False:
             credentials = self.adaptor.generate_credentials(workspace_id, storage_name)
-            storage_provider.save_naas_credentials(workspace_id, storage_name, credentials)
+            json_credentials = json.dumps(credentials)
+            storage_provider.save_naas_credentials(workspace_id, storage_name, json_credentials)
+
 
         response = storage_provider.get_workspace_storage_object(workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file)
         return response

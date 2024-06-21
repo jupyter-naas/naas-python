@@ -72,7 +72,7 @@ class SDKStorageAdaptor(IStorageInvoker):
         storage_name: str = "",
         src_file: str = "",
         dst_file: str = "",
-    ) -> bytes:
+    ) -> dict:
         if os.path.isfile(src_file):
             response = self.domain.post_workspace_storage_object(
                 workspace_id=workspace_id,
