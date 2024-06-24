@@ -262,7 +262,7 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         elif "Unable to locate credentials" in exception:
             raise BadCredentials("Unable to locate credentials. Please generate credentials.")   
         elif "Storage already exist" in exception:
-            raise StorageNotFoundError(f"Storage already exist.")                  
+            raise StorageNotFoundError(f"Storage already exist.")         
         else :
             print("exception", exception)
             raise Exception(exception) 
