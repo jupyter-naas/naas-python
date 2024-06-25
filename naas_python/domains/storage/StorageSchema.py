@@ -86,27 +86,27 @@ class IStorageDomain(metaclass=ABCMeta):
     #TODO to be validated
 
     @abstractmethod    
-    def create_workspace_storage(self,
+    def create(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
     ) -> dict:
         raise NotImplementedError
 
     @abstractmethod    
-    def delete_workspace_storage(self,
+    def delete(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
     ) -> dict:
         raise NotImplementedError
     
     @abstractmethod
-    def list_workspace_storage(self, 
+    def list(self, 
         workspace_id: str, 
     ) -> dict:
         raise NotImplementedError
     
     @abstractmethod    
-    def list_workspace_storage_object(self,
+    def list_objects(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         storage_prefix: Object.__fields__['prefix'],        
@@ -114,7 +114,7 @@ class IStorageDomain(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod    
-    def delete_workspace_storage_object(self,
+    def delete_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         object_name: Object.__fields__['name'],
@@ -122,7 +122,7 @@ class IStorageDomain(metaclass=ABCMeta):
         raise NotImplementedError     
     
     @abstractmethod
-    def post_workspace_storage_object(self,
+    def post_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         src_file: str,
@@ -131,7 +131,7 @@ class IStorageDomain(metaclass=ABCMeta):
         raise NotImplementedError
     
     @abstractmethod
-    def get_workspace_storage_object(self,
+    def get_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         src_file: str,
@@ -141,7 +141,7 @@ class IStorageDomain(metaclass=ABCMeta):
    
     
     @abstractmethod    
-    def create_workspace_storage_credentials(self,
+    def create_credentials(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],        
     ) -> dict:

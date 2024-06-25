@@ -18,7 +18,7 @@ class StorageDomain(IStorageDomain):
         self.storage_provider_adaptors : Mapping[str, IStorageProviderAdaptor] = storage_provider_adaptors
 
 ############### API ###############
-    def create_workspace_storage(self, 
+    def create(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name'],
     ) -> dict:
@@ -28,7 +28,7 @@ class StorageDomain(IStorageDomain):
         )
         return response
 
-    def delete_workspace_storage(self, 
+    def delete(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name']
     ) -> dict:
@@ -38,7 +38,7 @@ class StorageDomain(IStorageDomain):
         )
         return response
     
-    def list_workspace_storage(self, 
+    def list(self, 
         workspace_id: str, 
     ) -> dict:
         response = self.adaptor.list_workspace_storage(
@@ -46,7 +46,7 @@ class StorageDomain(IStorageDomain):
         )
         return response     
     
-    def list_workspace_storage_object(self, 
+    def list_objects(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name'],
         storage_prefix: Object.__fields__['prefix'],
@@ -58,7 +58,7 @@ class StorageDomain(IStorageDomain):
         )
         return response
     
-    def delete_workspace_storage_object(self, 
+    def delete_object(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name'],
         object_name: Object.__fields__['name'],
@@ -70,7 +70,7 @@ class StorageDomain(IStorageDomain):
         )
         return response    
 
-    def create_workspace_storage_credentials(self,         
+    def create_credentials(self,         
         workspace_id: str,
         storage_name: Storage.__fields__['name'],        
     ) -> dict:
@@ -96,7 +96,7 @@ class StorageDomain(IStorageDomain):
         return self.storage_provider_adaptors[storage_provider_id]
 
 
-    def post_workspace_storage_object(self, 
+    def post_object(self, 
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         src_file: str,
@@ -117,7 +117,7 @@ class StorageDomain(IStorageDomain):
         response = storage_provider.post_workspace_storage_object(workspace_id=workspace_id, storage_name=storage_name, src_file=src_file, dst_file=dst_file)
         return response
     
-    def get_workspace_storage_object(self,
+    def get_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         src_file: str,
