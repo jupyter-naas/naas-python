@@ -34,19 +34,19 @@ class IAssetDomain(metaclass=ABCMeta):
     adaptor: IAssetAdaptor
 
     @abstractmethod
-    def create_asset(self, workspace_id:str, asset_creation:AssetCreation) -> Asset:
+    def create(self, workspace_id:str, asset_creation:AssetCreation) -> Asset:
         raise NotImplementedError()
     
     @abstractmethod
-    def get_asset(self, workspace_id:str, asset_id:str) -> Asset:
+    def get(self, workspace_id:str, asset_id:str) -> Asset:
         raise NotImplementedError()
 
     @abstractmethod
-    def update_asset(self, workspace_id:str, asset_id:str, asset_update: AssetUpdate) -> Asset:
+    def update(self, workspace_id:str, asset_id:str, asset_update: AssetUpdate) -> Asset:
         raise NotImplementedError()    
     
     @abstractmethod
-    def delete_asset(self, workspace_id:str, asset_id:str) -> None:
+    def delete(self, workspace_id:str, asset_id:str) -> None:
         raise NotImplementedError()
 
 # Primary Adaptor

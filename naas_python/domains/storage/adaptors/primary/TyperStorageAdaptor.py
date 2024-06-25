@@ -179,7 +179,8 @@ class TyperStorageAdaptor(IStorageInvoker):
             workspace_id=workspace_id,
             storage_name=storage_name
         )
-        print("Credentials created.")                
+        print("Credentials created.")
+        print(response)               
 
 ############### BOTO3 ###############
     def post_workspace_storage_object(self,

@@ -82,7 +82,7 @@ class SDKStorageAdaptor(IStorageInvoker):
             )
             return response            
         else:
-            raise FileNotFoundError(f"File '{src_file}' does not exist.")
+            raise FileNotFoundError(f"File not found: {src_file}")
 
     def get_workspace_storage_object(self, 
         workspace_id: str = "", 

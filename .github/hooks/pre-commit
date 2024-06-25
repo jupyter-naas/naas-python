@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Execute the make target
+make test
+
+# Capture the exit status of the make command
+STATUS=$?
+
+# If the make command fails, exit with the same status
+if [ $STATUS -ne 0 ]; then
+    echo "Pre-commit hook failed: make test failed with status $STATUS"
+    exit $STATUS
+fi
+
+# If the make command succeeds, allow the commit to proceed
+exit 0
