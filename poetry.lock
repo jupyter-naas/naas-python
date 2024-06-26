@@ -871,4 +871,8 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
+<<<<<<< HEAD
 content-hash = "77f541de1cf561012ac4aec2d30aab07370784e6bc699908e3720b46d7b043da"
+=======
+content-hash = "e12927804eb27a440be92e1bfe13ffc3e0a7445e8054793ca6fae7eed23a8add"
+>>>>>>> 143-bugstorage-created-credentials-seems-to-not-be-working
