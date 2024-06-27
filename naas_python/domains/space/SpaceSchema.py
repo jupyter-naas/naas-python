@@ -68,29 +68,7 @@ class ISpaceDomain(metaclass=ABCMeta):
 
 
 class ISpaceInvoker(metaclass=ABCMeta):
-    @abstractmethod
-    def create(self, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def update(self, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def get(self, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def list(self, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def delete(self, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def add(self, **kwargs):
-        raise NotImplementedError
+    pass
 
 
 # Exceptions

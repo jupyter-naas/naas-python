@@ -93,6 +93,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         name: str = typer.Option(..., "--name", "-n", help="Name of the space"),
         image: str = typer.Option(..., "--image", help="Image of the space"),
         domain: str = typer.Option("", "--domain", "-d", help="Domain of the space"),
+        # namespace: str = typer.Option("", "--namespace", "-d", help="Namespace of the space"),
         env: str = typer.Option(
             {},
             "--env",
@@ -124,6 +125,7 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         space = self.domain.create(
             name=name,
             domain=domain,
+            # domain=domain,
             containers=[
                 {
                     "name": name,
@@ -249,8 +251,8 @@ class TyperSpaceAdaptor(ISpaceInvoker):
 
     def list(
         self,
-        page_size: int = typer.Option(0, help="Size of each page of results"),
-        page_number: int = typer.Option(0, help="Target page number of results"),
+        # page_size: int = typer.Option(0, help="Size of each page of results"),
+        # page_number: int = typer.Option(0, help="Target page number of results"),
         rich_preview: bool = typer.Option(
             False,
             "--rich-preview",
@@ -259,7 +261,8 @@ class TyperSpaceAdaptor(ISpaceInvoker):
         ),
     ):
         """List all spaces for the current user"""
-        space_list = self.domain.list(page_size=page_size, page_number=page_number)
+        # space_list = self.domain.list(page_size=page_size, page_number=page_number)
+        space_list = self.domain.list()
 
         data = []
         headers = []

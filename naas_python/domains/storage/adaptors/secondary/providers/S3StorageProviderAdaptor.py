@@ -59,13 +59,14 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         key = f"{workspace_id}/{storage_name}/{dst_file}"
         key = self.__clean_path(key)
 
-        try:
-            if self.AWS_ACCESS_KEY_ID is None or self.__s3_token_is_expired(self.AWS_SESSION_EXPIRATION_TOKEN):
-                self.__read_naas_credentials(workspace_id, storage_name)
-            
+        try:        
+    
+            if self.valid_naas_credentials(workspace_id, storage_name) is False:
+                raise BadCredentials("Credentials Not found. Please try generate new credentials.")
+
             content_type, _ = mimetypes.guess_type(src_file)
             s3 = boto3.client('s3')
-            response = s3.upload_file(Filename=src_file, Bucket=self.naas_bucket, Key=key,  ExtraArgs={'ContentType': content_type})
+            response = s3.upload_file(Filename=src_file, Bucket=self.naas_bucket, Key=key,  ExtraArgs={'ContentType': str(content_type)})
             return response
         except Exception as e:
             self.__handle_exceptions(str(e))
@@ -91,12 +92,13 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         object_key = self.__clean_path(object_key)
 
         try:
-            if self.AWS_ACCESS_KEY_ID is None or self.__s3_token_is_expired(self.AWS_SESSION_EXPIRATION_TOKEN):
-                self.__read_naas_credentials(workspace_id, storage_name)
+            
+            if self.valid_naas_credentials(workspace_id, storage_name) is False:
+                raise BadCredentials("Credentials Not found. Please try generate new credentials.")
 
             s3 = boto3.client('s3')
             response = s3.download_file(Bucket=self.naas_bucket , Key=object_key, Filename=filename)
-            return response
+            return response            
         
         except Exception as e:
             self.__handle_exceptions(str(e))
@@ -117,7 +119,7 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
             else:
                 return False
         else:
-            return False # If AWS_SESSION_EXPIRATION_TOKEN is None it never expire
+            return False
 
     def __update_aws_env(self, access_key_id:str, secret_key:str, session_token:str, expiration:str, region_name:str)-> None:
         self.AWS_ACCESS_KEY_ID = access_key_id
@@ -131,124 +133,110 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         os.environ['AWS_DEFAULT_REGION'] = region_name
 
 
-    def __read_naas_credentials(self, workspace_id:str, storage_name:str)-> None:
+    def __read_naas_credentials(self, workspace_id:str, storage_name:str)-> dict:
         #TODO new feature: self.__get_active_workspace()
 
-        # do not change setted env variables
-        if not self.AWS_ACCESS_KEY_ID:
+        json_credentials = {}
+        if self.AWS_ACCESS_KEY_ID == "":
 
-            # try read env var from naas_credentials file
             if os.path.exists(self.naas_credentials):
                 with open(self.naas_credentials, 'r') as file:
-                    json_credentials = json.load(file)
+                    file_data = file.read()
 
-                # get the storages list
-                json_storages = json_credentials.get('storage', {})
-                if workspace_id in json_storages and storage_name in json_storages[workspace_id] and 's3' in json_storages[workspace_id][storage_name]:
-                        json_credentials = json_storages[workspace_id][storage_name]['s3']
-                        region_name = json_credentials.get('REGION_NAME')
-                        access_key_id = json_credentials.get('AWS_ACCESS_KEY_ID')
-                        secret_key = json_credentials.get('AWS_SECRET_ACCESS_KEY')
-                        session_token = json_credentials.get('AWS_SESSION_TOKEN')
-                        expiration = json_credentials.get('AWS_SESSION_EXPIRATION_TOKEN')
-                else :
-                    raise BadCredentials("Credentials Not found. Please generate new credentials.")
-
-                if self.__s3_token_is_expired(expiration) :
-                    raise ExpiredToken("The provided token has expired. Please generate new credentials.")
-                else :
-                    if access_key_id is not None :
-                        self.__update_aws_env(
-                            region_name=region_name,
-                            access_key_id=access_key_id,
-                            secret_key=secret_key,
-                            session_token=session_token,
-                            expiration=expiration
-                        )
-                    else:
+                    if file_data is None:
                         raise BadCredentials("missing information in file, generate new credentials")
 
+                    json_credentials = json.loads(file_data)
+
+                    if json_credentials['credentials']['s3']:
+                            region_name = str(json_credentials.get('region_name'))
+                            access_key_id = str(json_credentials.get('access_key_id'))
+                            secret_key = str(json_credentials.get('secret_key'))
+                            session_token = str(json_credentials.get('session_token'))
+                            expiration = str(json_credentials.get('expiration'))
+                            self.__update_aws_env(region_name, access_key_id, secret_key, session_token, expiration)
+                            return json_credentials
+                    else:
+                        raise BadCredentials("missing information in file, generate new credentials")
+            else :    
+                raise BadCredentials("Credentials Not found. Please try generate new credentials.")
+        else:
+            return json_credentials
+
     def valid_naas_credentials(self, workspace_id:str, storage_name:str)-> bool:
-        # do not change setted env variables
-        if not self.AWS_ACCESS_KEY_ID:
 
-            # try read env var from naas_credentials file
-            if os.path.exists(self.naas_credentials):
-                with open(self.naas_credentials, 'r') as file:
-                    json_credentials = json.load(file)
+        naas_credentials = {}
 
-                # get the storages list
-                json_storages = json_credentials.get('storage', {})
+        if os.path.exists(self.naas_credentials):
+            with open(self.naas_credentials, 'r') as file:
+                content_file = file.read()
 
-                # missing credentials in file
-                if workspace_id not in json_storages or storage_name not in json_storages[workspace_id] or 's3' not in json_storages[workspace_id][storage_name]:
-                    return False
-                else:
-                    json_credentials = json_storages[workspace_id][storage_name]['s3']
-                    access_key_id = json_credentials.get('AWS_ACCESS_KEY_ID')
-                    expiration = json_credentials.get('AWS_SESSION_EXPIRATION_TOKEN')
+                naas_credentials = json.loads(content_file)
 
-                if self.__s3_token_is_expired(expiration) :
-                    return False
-                elif access_key_id is None:
-                    return False
-                else:
+                if naas_credentials is None:
+                    raise BadCredentials("missing information in file, generate new credentials")
+                
+                s3_credentials = naas_credentials.get('credentials', {}).get('s3', {})
+                if s3_credentials:
+                    token_expiration = s3_credentials.get('expiration')
+                    if self.__s3_token_is_expired(token_expiration):
+                        return False
                     return True
+                else:
+                    return False
         else:
             return True
-        return True
 
+    def save_naas_credentials(self, workspace_id:str, storage_name:str, generated_s3_credentials:str)-> None:
+        credentials = json.loads(generated_s3_credentials)
 
-    def save_naas_credentials(self, workspace_id:str, storage_name:str, credentials:dict)-> str:
-
-        self.naas_bucket = urlparse(credentials['credentials']['s3']['endpoint_url']).netloc
-        self.naas_workspace_id = urlparse(credentials['credentials']['s3']['endpoint_url']).path.split('/')[1]
-        self.naas_storage = urlparse(credentials['credentials']['s3']['endpoint_url']).path.split('/')[2]
-        
         s3_credentials = {
             "provider": "s3",
-            "workspace_id": self.naas_workspace_id,
-            "storage_name": self.naas_storage,
-            "endpoint_url": f"s3.{credentials['credentials']['s3']['region_name']}.amazonaws.com",
+            "workspace_id": workspace_id,
+            "storage_name": storage_name,
+            "endpoint_url": credentials.get('credentials', {}).get('s3', {}).get('endpoint_url', ''),
             "bucket": f"{self.naas_bucket}",
-            "region_name": credentials['credentials']['s3']['region_name'],
-            "access_key_id": credentials['credentials']['s3']['access_key_id'],
-            "secret_key": credentials['credentials']['s3']['secret_key'],
-            "session_token": credentials['credentials']['s3']['session_token'],
-            "expiration": credentials['credentials']['s3']['expiration']
+            "region_name": credentials.get('credentials', {}).get('s3', {}).get('region_name', ''),
+            "access_key_id": credentials.get('credentials', {}).get('s3', {}).get('access_key_id', ''),
+            "secret_key": credentials.get('credentials', {}).get('s3', {}).get('secret_key', ''),
+            "session_token": credentials.get('credentials', {}).get('s3', {}).get('session_token', ''),
+             "expiration": credentials.get('credentials', {}).get('s3', {}).get('expiration', '')
         }
 
-        # write the credentials to the file
         naas_credentials = os.path.expanduser(self.naas_credentials)
         existing_data = {}
+        dict_existing_data = {}
 
         if os.path.exists(naas_credentials):
-            with open(naas_credentials, 'r') as f:
-                existing_data = json.load(f)
+            with open(naas_credentials, 'r') as file:
+                file_content = file.read()
 
-        # Ensure 'storage' key exists in existing_data
-        if 'storage' not in existing_data:
-            existing_data['storage'] = {}
+                json_token = json.loads(file_content)
 
-        # Update the 'storage' key with new credentials
-        existing_data['storage'].update({
-            s3_credentials['workspace_id']: {
-                    s3_credentials['storage_name']: {
-                        s3_credentials["provider"]: {
-                        "REGION_NAME": s3_credentials['region_name'],
-                        "AWS_ACCESS_KEY_ID": s3_credentials['access_key_id'],
-                        "AWS_SECRET_ACCESS_KEY": s3_credentials['secret_key'],
-                        "AWS_SESSION_TOKEN": s3_credentials['session_token'],
-                        "AWS_SESSION_EXPIRATION_TOKEN": s3_credentials['expiration']
-                    }
-                }
-            }
-        })
-        with open(naas_credentials, 'w') as f:
-            json.dump(existing_data, f)
-        return ("generated s3 credentials.")                
+                if 'jwt_token' in json_token:
+                    dict_existing_data['jwt_token'] = json_token['jwt_token']
 
-    #TODO try improve exception handling                    
+                existing_data['credentials'] = {}
+                existing_data['credentials']['s3'] = {}
+
+                existing_data['credentials']['s3'].update({
+                    "endpoint_url": s3_credentials['endpoint_url'],
+                    "region_name": s3_credentials['region_name'],
+                    "access_key_id": s3_credentials['access_key_id'],
+                    "secret_key": s3_credentials['secret_key'],
+                    "session_token": s3_credentials['session_token'],
+                    "expiration": s3_credentials['expiration']
+                })
+
+                dict_existing_data.update(existing_data)
+
+            self.__update_aws_env(s3_credentials['access_key_id'], s3_credentials['secret_key'], s3_credentials['session_token'], s3_credentials['expiration'], s3_credentials['region_name'])
+
+            with open(naas_credentials, 'w') as file:
+                json.dump(dict_existing_data, file)
+        else:
+            raise BadCredentials("Credentials file not found. Please try generate new credentials.")
+
     def __handle_exceptions(self, exception: str) -> None:                     
 
         if isinstance(exception, ServiceAuthenticationError):
@@ -274,7 +262,7 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         elif "Unable to locate credentials" in exception:
             raise BadCredentials("Unable to locate credentials. Please generate credentials.")   
         elif "Storage already exist" in exception:
-            raise StorageNotFoundError(f"Storage already exist.")                  
+            raise StorageNotFoundError(f"Storage already exist.")         
         else :
-            logger.error(exception)
+            print("exception", exception)
             raise Exception(exception) 

@@ -52,8 +52,9 @@ class NaasSpaceAPIAdaptor(BaseAPIAdaptor, ISpaceAdaptor):
         return self._handle_get_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
-    def list_spaces(self, page_size, page_number) -> dict:
-        _url = f"{self.host}/space/?page_size={page_size}&page_number={page_number}"
+    def list_spaces(self) -> dict:    
+
+        _url = f"{self.host}/space/"
 
         logging.debug(f"list request url: {_url}")
 

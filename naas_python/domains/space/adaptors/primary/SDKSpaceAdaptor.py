@@ -7,7 +7,7 @@ from naas_python.domains.space.SpaceSchema import (
     ISpaceInvoker,
     SpaceConflictError,
 )
-from naas_python.utils.cicd import Pipeline
+# from naas_python.utils.cicd import Pipeline
 
 
 class SDKSpaceAdaptor(ISpaceInvoker):
@@ -19,36 +19,31 @@ class SDKSpaceAdaptor(ISpaceInvoker):
     def create(
         self,
         name: str,
-        namespace: str,
-        image: str,
-        user_id: str,
-        env: dict,
-        resources: dict,
+        containers: list,
+        domain: str,
     ):
         """Create a space with the given name"""
         space = self.domain.create(
             name=name,
-            namespace=namespace,
-            image=image,
-            user_id=user_id,
-            env=env,
-            resources=resources,
+            containers=containers,
+            domain=domain
         )
         return space
 
-    def get(self, name: str, namespace: str):
+    def get(self, name: str):    
         """Get a space with the given name"""
-        space = self.domain.get(name=name, namespace=namespace)
+        space = self.domain.get(name=name)
         return space
 
-    def list(self, user_id: str, namespace: str):
+    def list(self):
         """List all spaces for the current user"""
-        space_list = self.domain.list(user_id=user_id, namespace=namespace)
-        return space_list
+        space_list = self.domain.list()
+        return space_list    
 
-    def delete(self, name: str, namespace: str):
+    def delete(self, name: str):    
         """Delete a space by name"""
-        self.domain.delete(name=name, namespace=namespace)
+        self.domain.delete(name=name)
+
 
     def update(
         self,
