@@ -1,4 +1,3 @@
-import json
 import os
 from logging import getLogger
 import pydash as _
@@ -6,7 +5,6 @@ import pydash as _
 logger = getLogger(__name__)
 
 import requests
-from requests.exceptions import ConnectionError
 
 from naas_python.utils.domains_base.secondary.BaseAPIAdaptor import BaseAPIAdaptor
 
@@ -22,7 +20,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
 
     def __handle_response(self, api_response: requests.Response) -> dict:
         if api_response.status_code == 201:
-            return None
+            return api_response.json()
         elif api_response.status_code == 200:
             return api_response.json()
         elif isinstance(api_response.json().get("error"), dict) and api_response.json().get("error")["error"] == 1:
@@ -34,7 +32,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
             raise APIError(api_response.json())
               
     @BaseAPIAdaptor.service_status_decorator
-    def create_workspace_storage(self, 
+    def create(self, 
         workspace_id: str, 
         storage_name: Storage.__fields__['name']
     ) -> dict:
@@ -51,7 +49,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         return self.__handle_response(api_response)
     
     @BaseAPIAdaptor.service_status_decorator
-    def delete_workspace_storage(self, 
+    def delete(self, 
         workspace_id: str, 
         storage_name: str
     ) -> dict:
@@ -64,7 +62,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         return self.__handle_response(api_response)
     
     @BaseAPIAdaptor.service_status_decorator
-    def list_workspace_storage(self, 
+    def list(self, 
         workspace_id: str,
     ) -> dict:
         _url = f"{self.host}/workspace/{workspace_id}/storage/"
@@ -76,7 +74,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         return self.__handle_response(api_response)      
     
     @BaseAPIAdaptor.service_status_decorator
-    def list_workspace_storage_object(self, 
+    def list_objects(self, 
         workspace_id: str, 
         storage_name: str,
         storage_prefix: str,
@@ -90,7 +88,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         return self.__handle_response(api_response)
     
     @BaseAPIAdaptor.service_status_decorator
-    def delete_workspace_storage_object(self, 
+    def delete_object(self, 
         workspace_id: str, 
         storage_name: str,
         object_name: str,
@@ -106,7 +104,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         return self.__handle_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
-    def generate_credentials(self, workspace_id :str, storage_name: str) -> dict:
+    def create_credentials(self, workspace_id : str, storage_name: Storage.__fields__['name']) -> dict:
 
         _url = f"{self.host}/workspace/{workspace_id}/storage/credentials/"
 

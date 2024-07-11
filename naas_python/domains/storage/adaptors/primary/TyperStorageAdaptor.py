@@ -39,17 +39,17 @@ class TyperStorageAdaptor(IStorageInvoker):
             context_settings={"help_option_names": ["-h", "--help"]},
         )
 
-        self.app.command("create")(self.create_workspace_storage)
-        self.app.command("delete")(self.delete_workspace_storage)
-        self.app.command("list")(self.list_workspace_storage)
-        self.app.command("list-object")(self.list_workspace_storage_object)
-        self.app.command("put-object")(self.post_workspace_storage_object)
-        self.app.command("get-object")(self.get_workspace_storage_object)
-        self.app.command("delete-object")(self.delete_workspace_storage_object)
-        self.app.command("connect")(self.create_workspace_storage_credentials)
+        self.app.command("create")(self.create)
+        self.app.command("delete")(self.delete)
+        self.app.command("list")(self.list)
+        self.app.command("list-object")(self.list_objects)
+        self.app.command("post-object")(self.post_object)
+        self.app.command("get-object")(self.get_object)
+        self.app.command("delete-object")(self.delete_object)
+        self.app.command("create-credentials")(self.create_credentials)
 
 ############### API ###############
-    def create_workspace_storage(self,
+    def create(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
         storage_name: str = typer.Option(..., "--storage", "-s", help="Name of the storage"),
         rich_preview: bool = typer.Option(
@@ -58,16 +58,17 @@ class TyperStorageAdaptor(IStorageInvoker):
             "-rp",
             help="Rich preview of the information as a table",
         )
-    ):
+    ) -> dict:
             """Create a Workspace Storage"""
             print("creating storage...")
-            storage = self.domain.create_workspace_storage(
+            storage = self.domain.create(
                 workspace_id=workspace_id,
                 storage_name=storage_name,
             )
             print(f"Storage {storage_name} created.")
+            return storage
     
-    def delete_workspace_storage(self,
+    def delete(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
         storage_name: str = typer.Option(..., "--storage", "-s", help="Name of the storage"),
         rich_preview: bool = typer.Option(
@@ -76,16 +77,17 @@ class TyperStorageAdaptor(IStorageInvoker):
             "-rp",
             help="Rich preview of the information as a table",
         )
-    ):
+    ) -> dict:
             """Delete a Workspace Storage"""
             print("deleting storage...")
-            storage = self.domain.delete_workspace_storage(
+            storage = self.domain.delete(
                 workspace_id=workspace_id,
                 storage_name=storage_name,
             )
             print(f"Storage {storage_name} deleted.")
+            return storage
 
-    def list_workspace_storage(self,
+    def list(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),        
         rich_preview: bool = typer.Option(
             False,
@@ -93,9 +95,9 @@ class TyperStorageAdaptor(IStorageInvoker):
             "-rp",
             help="Rich preview of the information as a table",
         )
-    ):
+    ) -> dict:
             """List Workspace Storages"""
-            list_storage = self.domain.list_workspace_storage(
+            list_storage = self.domain.list(
                 workspace_id=workspace_id,
             )
             if rich_preview:
@@ -107,10 +109,11 @@ class TyperStorageAdaptor(IStorageInvoker):
                     table.add_row(storage['name'])
 
                 console.print(table)
+                return {}
             else:
-                print(list_storage)
+                return list_storage
          
-    def list_workspace_storage_object(self,
+    def list_objects(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
         storage_name: str = typer.Option(..., "--storage", "-s", help="Name of the storage"),
         storage_prefix: str = typer.Option(..., "--prefix", "-p", help="Path prefix in the storage"),        
@@ -120,9 +123,9 @@ class TyperStorageAdaptor(IStorageInvoker):
             "-rp",
             help="Rich preview of the information as a table",
         )
-    ):
+    ) -> dict:
             """List a Workspace Storage Objects"""
-            list_storage_object = self.domain.list_workspace_storage_object(
+            list_storage_object = self.domain.list_objects(
                 workspace_id=workspace_id,
                 storage_name=storage_name,
                 storage_prefix=storage_prefix,
@@ -140,10 +143,11 @@ class TyperStorageAdaptor(IStorageInvoker):
                     table.add_row(object['name'], object['type'], object['prefix'], object['size'], object['lastmodified'])
 
                 console.print(table)
+                return {}
             else:
-                print(list_storage_object)
+                return list_storage_object
 
-    def delete_workspace_storage_object(self,                                             
+    def delete_object(self,                                             
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
         storage_name: str = typer.Option(..., "--storage", "-s", help="Name of the storage"),                                      
         object_name: str = typer.Option(..., "--object", "-o", help="Name of Object or Folder to remove."),
@@ -153,17 +157,18 @@ class TyperStorageAdaptor(IStorageInvoker):
             "-rp",
             help="Rich preview of the information as a table",
         )
-    ):
+    ) -> dict:
         """Delete a Workspace Storage Object"""
         print("Deleting object...")
-        response = self.domain.delete_workspace_storage_object(
+        response = self.domain.delete_object(
             workspace_id=workspace_id,
             storage_name=storage_name,
             object_name=object_name,
         )
         print("Object deleted.")
+        return response
                 
-    def create_workspace_storage_credentials(self,
+    def create_credentials(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
         storage_name: str = typer.Option(..., "--storage", "-s", help="Name of the storage"),        
         rich_preview: bool = typer.Option(
@@ -172,18 +177,18 @@ class TyperStorageAdaptor(IStorageInvoker):
             "-rp",
             help="Rich preview of the information as a table",
         )
-    ):
+    ) -> dict:
         """Create Storage Credentials"""
         print("Creating credentials...")
-        response = self.domain.create_workspace_storage_credentials(
+        response = self.domain.create_credentials(
             workspace_id=workspace_id,
             storage_name=storage_name
         )
         print("Credentials created.")
-        print(response)               
+        return response
 
 ############### BOTO3 ###############
-    def post_workspace_storage_object(self,
+    def post_object(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of  the workspace"),
         storage_name: str = typer.Option(..., "--storage", "-s", help="Name of the storage"),      
         src_file: str = typer.Option(..., "--source", "-src", help="File path to upload in the storage"),
@@ -194,21 +199,23 @@ class TyperStorageAdaptor(IStorageInvoker):
             "-rp",
             help="Rich preview of the information as a table",
         )
-    ) -> None:
+    ) -> dict:
         """Post a Workspace Storage Object"""        
         if not os.path.isfile(src_file):
             print(f"File '{src_file}' does not exist.")
+            return {}
         else:
             print("Uploading object...")
-            response = self.domain.post_workspace_storage_object(
+            response = self.domain.post_object(
                 workspace_id=workspace_id,
                 storage_name=storage_name,
                 src_file=src_file,
                 dst_file=dst_file
             )
             print("Object uploaded.")
+            return response
 
-    def get_workspace_storage_object(self,
+    def get_object(self,
         workspace_id: str = typer.Option(None, "--workspace", "-w", help="ID of the workspace"),
         storage_name: str = typer.Option(None, "--storage", "-s", help="Name of the storage"),
         src_file: str = typer.Option(None, "--source", "-src", help="File path to download in the storage"),                               
@@ -219,16 +226,18 @@ class TyperStorageAdaptor(IStorageInvoker):
             "-rp",
             help="Rich preview of the information as a table",
         )
-    ):
+    ) -> bytes:
             """Get a Workspace Storage Object"""            
             if src_file.endswith("/"):
                 print("this is not an object")
+                return b""
             else :
                 print("Downloading object...")
-                response = self.domain.get_workspace_storage_object(
+                response = self.domain.get_object(
                     workspace_id=workspace_id,
                     storage_name=storage_name,
                     src_file=src_file,
                     dst_file=dst_file
                 )
                 print("Object downloaded.")
+                return response

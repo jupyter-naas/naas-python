@@ -1,8 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
-from typing import Mapping
+from typing import List, Mapping, Any
+from uuid import UUID
 
-from naas_models.pydantic.storage_p2p import *
+from naas_models.pydantic.storage_p2p import Storage
 from .models.Storage import Storage, Object
 
 
@@ -13,27 +14,27 @@ logger = getLogger(__name__)
 
 class IStorageAdaptor(metaclass=ABCMeta):
     @abstractmethod    
-    def create_workspace_storage(self,
-        workspace_id: str,
-        storage_name: Storage.__fields__['name'],
-    ) -> dict[str, str]:
-        raise NotImplementedError
-    
-    @abstractmethod
-    def delete_workspace_storage(self,
+    def create(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
     ) -> dict:
         raise NotImplementedError
     
     @abstractmethod
-    def list_workspace_storage(self, 
+    def delete(self,
+        workspace_id: str,
+        storage_name: Storage.__fields__['name'],
+    ) -> dict:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def list(self, 
         workspace_id: str, 
     ) -> dict:
         raise NotImplementedError
     
     @abstractmethod    
-    def list_workspace_storage_object(self,
+    def list_objects(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         storage_prefix: Object.__fields__['prefix'],        
@@ -41,7 +42,7 @@ class IStorageAdaptor(metaclass=ABCMeta):
         raise NotImplementedError
     
     @abstractmethod    
-    def delete_workspace_storage_object(self,
+    def delete_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         object_name: Object.__fields__['name'],   
@@ -49,7 +50,7 @@ class IStorageAdaptor(metaclass=ABCMeta):
         raise NotImplementedError    
     
     @abstractmethod
-    def generate_credentials(self, workspace_id :str, storage_name: str) -> dict:
+    def create_credentials(self, workspace_id : str, storage_name: Storage.__fields__['name']) -> dict:
         raise NotImplementedError
     
 class IStorageProviderAdaptor(metaclass=ABCMeta):
@@ -57,7 +58,7 @@ class IStorageProviderAdaptor(metaclass=ABCMeta):
     provider_id : str
 
     @abstractmethod
-    def post_workspace_storage_object(self,
+    def post_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         src_file: str,
@@ -66,7 +67,7 @@ class IStorageProviderAdaptor(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def get_workspace_storage_object(self,
+    def get_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         src_file: str,
@@ -82,8 +83,6 @@ class IStorageProviderAdaptor(metaclass=ABCMeta):
 class IStorageDomain(metaclass=ABCMeta):
     adaptor: IStorageAdaptor
     storage_provider_adaptors : Mapping[str, IStorageProviderAdaptor]
-    # storage_provider_adaptors : Map[str, IStorageProviderAdaptor]
-    #TODO to be validated
 
     @abstractmethod    
     def create(self,
@@ -139,7 +138,6 @@ class IStorageDomain(metaclass=ABCMeta):
     ) -> bytes:
         raise NotImplementedError
    
-    
     @abstractmethod    
     def create_credentials(self,
         workspace_id: str,
@@ -150,35 +148,57 @@ class IStorageDomain(metaclass=ABCMeta):
 # Primary Adaptor
 class IStorageInvoker(metaclass=ABCMeta):
     @abstractmethod
-    def create_workspace_storage(self, **kwargs):
+    def create(self, workspace_id: str, storage_name: Storage.__fields__['name']) -> dict:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def delete(self,
+        workspace_id: str, 
+        storage_name: str = Storage.__fields__['name'],
+    ) -> dict:
+        raise NotImplementedError    
+    
+    @abstractmethod
+    def list(self, workspace_id: str) -> dict:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def create_credentials(self,                   
+        workspace_id : str,
+        storage_name = str,
+    ) -> dict:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def list_objects(self,        
+        workspace_id: str, 
+        storage_name: str, 
+        storage_prefix: str) -> dict:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_workspace_storage(self, **kwargs):
+    def delete_object(self, 
+        workspace_id: str, 
+        storage_name: str,
+        object_name: str) -> dict:
         raise NotImplementedError
     
     @abstractmethod
-    def list_workspace_storage(self, **kwargs):
+    def post_object(self,
+        workspace_id: str, 
+        storage_name: str,
+        src_file: str,
+        dst_file: str,
+        ) -> dict:
         raise NotImplementedError
     
     @abstractmethod
-    def list_workspace_storage_object(self, **kwargs):
-        raise NotImplementedError
-    
-    @abstractmethod
-    def delete_workspace_storage_object(self, **kwargs):
-        raise NotImplementedError     
-    
-    @abstractmethod
-    def post_workspace_storage_object(self, **kwargs):
-        raise NotImplementedError
-    
-    @abstractmethod
-    def get_workspace_storage_object(self, **kwargs):
-        raise NotImplementedError        
-    
-    @abstractmethod
-    def create_workspace_storage_credentials(self, **kwargs):
+    def get_object(self,
+        workspace_id: str, 
+        storage_name: str,
+        src_file: str,
+        dst_file: str,                   
+    ) -> bytes:
         raise NotImplementedError
     
 # Exceptions

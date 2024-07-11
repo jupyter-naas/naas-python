@@ -1,7 +1,7 @@
-from ..adaptors.secondary.NaasStorageAPIAdaptor import NaasStorageAPIAdaptor
+from naas_python.domains.storage.adaptors.secondary.NaasStorageAPIAdaptor import NaasStorageAPIAdaptor
 from naas_python.domains.storage.adaptors.secondary.providers.S3StorageProviderAdaptor import S3StorageProviderAdaptor
-from ..StorageDomain import StorageDomain
-from ..adaptors.primary.SDKStorageAdaptor import SDKStorageAdaptor
+from naas_python.domains.storage.StorageDomain import StorageDomain
+from naas_python.domains.storage.adaptors.primary.SDKStorageAdaptor import SDKStorageAdaptor
 
 secondaryAdaptor = NaasStorageAPIAdaptor()
 
