@@ -100,18 +100,20 @@ class TyperStorageAdaptor(IStorageInvoker):
             list_storage = self.domain.list(
                 workspace_id=workspace_id,
             )
-            if rich_preview:
-                console = Console()
-                table = Table(show_header=True, header_style="bold black")
-                table.add_column("Name")
+            # Always Rich List
+            # if rich_preview:
+            console = Console()
+            table = Table(show_header=True, header_style="bold black")
+            table.add_column("Name")
 
-                for storage in list_storage['storage']:
-                    table.add_row(storage['name'])
+            for storage in list_storage['storage']:
+                table.add_row(storage['name'])
 
-                console.print(table)
-                return {}
-            else:
-                return list_storage
+            console.print(table)
+            return {}
+            # else:
+            #     print(list_storage)
+            #     return list_storage
          
     def list_objects(self,
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
@@ -130,22 +132,24 @@ class TyperStorageAdaptor(IStorageInvoker):
                 storage_name=storage_name,
                 storage_prefix=storage_prefix,
             )
-            if rich_preview:
-                console = Console()
-                table = Table(show_header=True, header_style="bold black")
-                table.add_column("Name")
-                table.add_column("Type")
-                table.add_column("Prefix")
-                table.add_column("Size")
-                table.add_column("Last Modified")
+            # Always Rich List
+            # if rich_preview:
+            console = Console()
+            table = Table(show_header=True, header_style="bold black")
+            table.add_column("Name")
+            table.add_column("Type")
+            table.add_column("Prefix")
+            table.add_column("Size")
+            table.add_column("Last Modified")
 
-                for object in list_storage_object["object"]:
-                    table.add_row(object['name'], object['type'], object['prefix'], object['size'], object['lastmodified'])
+            for object in list_storage_object["object"]:
+                table.add_row(object['name'], object['type'], object['prefix'], object['size'], object['lastmodified'])
 
-                console.print(table)
-                return {}
-            else:
-                return list_storage_object
+            console.print(table)
+            return {}
+            # else:
+            #     print(list_storage_object)
+            #     return list_storage_object
 
     def delete_object(self,                                             
         workspace_id: str = typer.Option(..., "--workspace", "-w", help="ID of the workspace"),
