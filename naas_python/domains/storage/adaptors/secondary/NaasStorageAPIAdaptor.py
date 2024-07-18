@@ -1,6 +1,7 @@
 import os
 from logging import getLogger
 import pydash as _
+import json
 
 logger = getLogger(__name__)
 
@@ -23,10 +24,10 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
             return api_response.json()
         elif api_response.status_code == 200:
             return api_response.json()
-        elif isinstance(api_response.json().get("error"), dict) and api_response.json().get("error")["error"] == 1:
+        elif api_response.status_code == 404:
             raise StorageNotFoundError(api_response.json().get("error")["message"])
-        elif isinstance(api_response.json().get("error"), dict) and api_response.json().get("error")["error"] == 2:
-            raise StorageNotFoundError(api_response.json().get("error")["message"])               
+        elif api_response.json().get("error")["code"] == 0 and api_response.json().get("error")["message"] == "Success":
+            raise api_response.json()
         else:
             logger.error(api_response.json())
             raise APIError(api_response.json())

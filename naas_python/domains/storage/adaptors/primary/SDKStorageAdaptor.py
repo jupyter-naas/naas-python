@@ -20,11 +20,12 @@ class SDKStorageAdaptor(IStorageInvoker):
         )
         return response
 
-    def delete(self, workspace_id: str = "", storage_name: str = "") -> None:
+    def delete(self, workspace_id: str = "", storage_name: str = "") -> dict:
         response = self.domain.delete(
                 workspace_id=workspace_id,
                 storage_name=storage_name,
     )
+        return response
     
     def list(self, workspace_id: str = "") -> dict:
         response = self.domain.list(
@@ -56,13 +57,14 @@ class SDKStorageAdaptor(IStorageInvoker):
         workspace_id: str = "", 
         storage_name: str = "",
         object_name: str = "",
-        ) -> None:
+        ) -> dict:
 
         response = self.domain.delete_object(
                 workspace_id=workspace_id,
                 storage_name=storage_name,
                 object_name=object_name,
             )
+        return response
                 
 ############### BOTO3 ###############
     def post_object(self,

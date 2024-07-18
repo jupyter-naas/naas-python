@@ -13,7 +13,7 @@ from naas_python.utils.exceptions import NaasException
 logger = getLogger(__name__)
 
 class IStorageAdaptor(metaclass=ABCMeta):
-    @abstractmethod    
+    @abstractmethod
     def create(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
