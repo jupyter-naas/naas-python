@@ -25,7 +25,7 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         elif api_response.status_code == 200:
             return api_response.json()
         elif api_response.status_code == 404:
-            raise StorageNotFoundError(api_response.json().get("error")["message"])
+            raise StorageNotFoundError('Not found.')
         elif api_response.json().get("error")["code"] == 0 and api_response.json().get("error")["message"] == "Success":
             raise api_response.json()
         else:
@@ -95,13 +95,14 @@ class NaasStorageAPIAdaptor(BaseAPIAdaptor, IStorageAdaptor):
         object_name: str,
     ) -> dict:
         object=os.path.basename(object_name)
-        prefix=os.path.dirname(object_name)
+        prefix=os.path.dirname(object_name)+'/'
         _url = f"{self.host}/workspace/{workspace_id}/storage/{storage_name}?prefix={prefix}&object={object}"
 
         api_response = self.make_api_request(
             requests.delete,
             _url,
         )
+        print(api_response)
         return self.__handle_response(api_response)
 
     @BaseAPIAdaptor.service_status_decorator
