@@ -1,4 +1,4 @@
-from naas_python.domains.storage.StorageSchema import IStorageProviderAdaptor, Storage, Object
+from naas_python.domains.storage.StorageSchema import IStorageProviderAdaptor, Storage
 
 import boto3
 import os, json, re
@@ -42,7 +42,7 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         self.AWS_SESSION_EXPIRATION_TOKEN=None    
 
 
-    def post_workspace_storage_object(self,
+    def post_object(self,
         workspace_id: str,
         storage_name: Storage.__fields__['name'],
         src_file: str,
@@ -60,10 +60,10 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         key = self.__clean_path(key)
 
         try:
-            if self.AWS_ACCESS_KEY_ID is None or self.__s3_token_is_expired(self.AWS_SESSION_EXPIRATION_TOKEN):
-                self.__read_naas_credentials(workspace_id, storage_name)
+            self.__read_naas_credentials(workspace_id, storage_name)
             
             content_type, _ = mimetypes.guess_type(src_file)
+
             s3 = boto3.client('s3')
             response = s3.upload_file(Filename=src_file, Bucket=self.naas_bucket, Key=key,  ExtraArgs={'ContentType': content_type})
             return response
@@ -72,7 +72,7 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         return response
 
        
-    def get_workspace_storage_object(self, 
+    def get_object(self, 
         workspace_id:str, 
         storage_name: str, 
         src_file: str, 
@@ -91,8 +91,7 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
         object_key = self.__clean_path(object_key)
 
         try:
-            if self.AWS_ACCESS_KEY_ID is None or self.__s3_token_is_expired(self.AWS_SESSION_EXPIRATION_TOKEN):
-                self.__read_naas_credentials(workspace_id, storage_name)
+            self.__read_naas_credentials(workspace_id, storage_name)
 
             s3 = boto3.client('s3')
             response = s3.download_file(Bucket=self.naas_bucket , Key=object_key, Filename=filename)
@@ -169,34 +168,31 @@ class S3StorageProviderAdaptor(IStorageProviderAdaptor):
                         raise BadCredentials("missing information in file, generate new credentials")
 
     def valid_naas_credentials(self, workspace_id:str, storage_name:str)-> bool:
-        # do not change setted env variables
-        if not self.AWS_ACCESS_KEY_ID:
 
-            # try read env var from naas_credentials file
-            if os.path.exists(self.naas_credentials):
-                with open(self.naas_credentials, 'r') as file:
-                    json_credentials = json.load(file)
+        # try read env var from naas_credentials file
+        if os.path.exists(self.naas_credentials):
+            with open(self.naas_credentials, 'r') as file:
+                json_credentials = json.load(file)
 
-                # get the storages list
-                json_storages = json_credentials.get('storage', {})
+            # get the storages list
+            json_storages = json_credentials.get('storage', {})
 
-                # missing credentials in file
-                if workspace_id not in json_storages or storage_name not in json_storages[workspace_id] or 's3' not in json_storages[workspace_id][storage_name]:
-                    return False
-                else:
-                    json_credentials = json_storages[workspace_id][storage_name]['s3']
-                    access_key_id = json_credentials.get('AWS_ACCESS_KEY_ID')
-                    expiration = json_credentials.get('AWS_SESSION_EXPIRATION_TOKEN')
+            # missing credentials in file
+            if workspace_id not in json_storages or storage_name not in json_storages[workspace_id] or 's3' not in json_storages[workspace_id][storage_name]:
+                return False
+            else:
+                json_credentials = json_storages[workspace_id][storage_name]['s3']
+                access_key_id = json_credentials.get('AWS_ACCESS_KEY_ID')
+                expiration = json_credentials.get('AWS_SESSION_EXPIRATION_TOKEN')
 
-                if self.__s3_token_is_expired(expiration) :
-                    return False
-                elif access_key_id is None:
-                    return False
-                else:
-                    return True
+            if self.__s3_token_is_expired(expiration) :
+                return False
+            elif access_key_id is None:
+                return False
+            else:
+                return True
         else:
-            return True
-        return True
+            return False
 
 
     def save_naas_credentials(self, workspace_id:str, storage_name:str, credentials:dict)-> str:
