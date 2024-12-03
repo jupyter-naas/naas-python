@@ -1,8 +1,16 @@
-# Naas Python SDK
+# 🐍 Naas Python SDK
 
 ## Overview
 
-Naas Python SDK is a software development kit that provides interfaces and implementations for interacting with Naas services. The project follows a clean architecture pattern with clear separation between domains, adaptors, and interfaces.
+Naas Python SDK is a software development kit that provides interfaces and implementations for interacting with Naas services. The project follows a hexagonal architecture pattern with clear separation between domains, adaptors, and interfaces.
+
+## Key Features
+- Space Management: Deploy and manage cloud applications
+- Storage Operations: S3-compatible storage with credential management
+- Asset Management: Handle digital assets
+- Registry Support: Container registry operations
+- Secret Management: Secure credential handling
+- CI/CD Integration: Automated pipeline generation
 
 ## Project Structure
 
